@@ -39,12 +39,24 @@ const displayColumns = [
   ["Duration", "duration"],
 ];
 
+const pdfJsUrl = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+const pdfWorkerUrl = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+const tesseractUrl = "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+const scriptLoads = new Map();
+
 const ticketText = document.querySelector("#ticketText");
 const ticketFile = document.querySelector("#ticketFile");
+const dropZone = document.querySelector("#dropZone");
+const fileMeta = document.querySelector("#fileMeta");
+const extractStatus = document.querySelector("#extractStatus");
+const statusText = document.querySelector("#statusText");
+const statusPercent = document.querySelector("#statusPercent");
+const progressBar = document.querySelector("#progressBar");
 const analyzeBtn = document.querySelector("#analyzeBtn");
 const clearBtn = document.querySelector("#clearBtn");
 const emptyState = document.querySelector("#emptyState");
 const results = document.querySelector("#results");
+const resultNotice = document.querySelector("#resultNotice");
 const summaryGrid = document.querySelector("#summaryGrid");
 const itineraryTab = document.querySelector("#itineraryTab");
 const requirementsTab = document.querySelector("#requirementsTab");
@@ -54,25 +66,49 @@ const jsonOutput = document.querySelector("#jsonOutput");
 const downloadBtn = document.querySelector("#downloadBtn");
 
 let currentTrip = null;
+let currentSourceType = "pasted_text";
 
 document.querySelectorAll("input[name='mode']").forEach((input) => {
   input.addEventListener("change", () => {
     const fileMode = input.value === "file" && input.checked;
-    ticketFile.classList.toggle("hidden", !fileMode);
-    ticketText.classList.toggle("hidden", fileMode);
+    dropZone.classList.toggle("hidden", !fileMode);
+    ticketText.classList.toggle("text-from-file", fileMode);
   });
 });
 
 ticketFile.addEventListener("change", async () => {
   const file = ticketFile.files[0];
   if (!file) return;
-  ticketText.value = await file.text();
+  await extractUploadedFile(file);
+});
+
+["dragenter", "dragover"].forEach((eventName) => {
+  dropZone.addEventListener(eventName, (event) => {
+    event.preventDefault();
+    dropZone.classList.add("drag-over");
+  });
+});
+
+["dragleave", "drop"].forEach((eventName) => {
+  dropZone.addEventListener(eventName, (event) => {
+    event.preventDefault();
+    dropZone.classList.remove("drag-over");
+  });
+});
+
+dropZone.addEventListener("drop", async (event) => {
+  const file = event.dataTransfer?.files?.[0];
+  if (!file) return;
+  await extractUploadedFile(file);
 });
 
 clearBtn.addEventListener("click", () => {
   ticketText.value = "";
   ticketFile.value = "";
+  fileMeta.classList.add("hidden");
+  setStatus("", 0, false);
   currentTrip = null;
+  currentSourceType = "pasted_text";
   results.classList.add("hidden");
   emptyState.classList.remove("hidden");
 });
@@ -143,10 +179,175 @@ function parseTicket(rawText) {
     passengers: [{ full_name: passenger || "" }],
     segments: [segment],
     meta: {
-      raw_source_type: "browser",
+      raw_source_type: currentSourceType,
       parser: "github_pages_static",
     },
   };
+}
+
+async function extractUploadedFile(file) {
+  currentSourceType = sourceTypeForFile(file);
+  fileMeta.innerHTML = `
+    <strong>${escapeHtml(file.name)}</strong>
+    <span>${escapeHtml(formatFileSize(file.size))} / ${escapeHtml(file.type || "unknown type")}</span>
+  `;
+  fileMeta.classList.remove("hidden");
+  ticketText.value = "";
+  results.classList.add("hidden");
+  emptyState.classList.remove("hidden");
+  analyzeBtn.disabled = true;
+
+  try {
+    setStatus("Reading file...", 5, true);
+    const extracted = await extractTextFromFile(file);
+    ticketText.value = extracted.trim();
+
+    if (!ticketText.value) {
+      setStatus("No readable text found. Try a clearer image or the full Streamlit app.", 100, true);
+      return;
+    }
+
+    setStatus(`Extracted ${ticketText.value.length.toLocaleString()} characters. Ready to analyze.`, 100, true);
+  } catch (error) {
+    ticketText.value = "";
+    setStatus(error.message || "Could not extract this file.", 100, true, true);
+  } finally {
+    analyzeBtn.disabled = false;
+  }
+}
+
+async function extractTextFromFile(file) {
+  if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
+    return extractPdfText(file);
+  }
+
+  if (file.type.startsWith("image/") || /\.(png|jpe?g|webp)$/i.test(file.name)) {
+    return ocrImage(file);
+  }
+
+  return file.text();
+}
+
+async function extractPdfText(file) {
+  setStatus("Loading PDF reader...", 8, true);
+  await ensureScript("pdfjsLib", pdfJsUrl, "PDF reader did not load. Check your internet connection and refresh.");
+  const pdfjsLib = window.pdfjsLib;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+
+  const bytes = await file.arrayBuffer();
+  setStatus("Opening PDF...", 12, true);
+  const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+  const pageTexts = [];
+
+  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+    const page = await pdf.getPage(pageNumber);
+    const content = await page.getTextContent();
+    const text = content.items.map((item) => item.str).join(" ");
+    pageTexts.push(text);
+    setStatus(`Reading PDF text layer ${pageNumber}/${pdf.numPages}...`, 12 + (pageNumber / pdf.numPages) * 48, true);
+  }
+
+  const nativeText = pageTexts.join("\n").trim();
+  if (nativeText.length >= 80 && !looksLikeGarbledText(nativeText)) {
+    return nativeText;
+  }
+
+  const maxPages = Math.min(pdf.numPages, 4);
+  const ocrTexts = [];
+  for (let pageNumber = 1; pageNumber <= maxPages; pageNumber += 1) {
+    const page = await pdf.getPage(pageNumber);
+    const viewport = page.getViewport({ scale: 2 });
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    canvas.width = Math.floor(viewport.width);
+    canvas.height = Math.floor(viewport.height);
+    await page.render({ canvasContext: context, viewport }).promise;
+    const imageUrl = canvas.toDataURL("image/png");
+    ocrTexts.push(await ocrImage(imageUrl, `OCR PDF page ${pageNumber}/${maxPages}`));
+  }
+
+  return ocrTexts.join("\n").trim() || nativeText;
+}
+
+async function ocrImage(imageSource, label = "OCR image") {
+  setStatus(`${label}: loading OCR engine...`, 12, true);
+  await ensureScript("Tesseract", tesseractUrl, "OCR engine did not load. Check your internet connection and refresh.");
+  setStatus(`${label}: loading OCR...`, 20, true);
+  const result = await window.Tesseract.recognize(imageSource, "eng+heb", {
+    logger: (message) => {
+      if (message.status) {
+        const progress = message.progress ? Math.round(message.progress * 100) : 0;
+        setStatus(`${label}: ${message.status}`, Math.min(95, Math.max(20, progress)), true);
+      }
+    },
+  });
+  return result.data.text || "";
+}
+
+async function ensureScript(globalName, url, errorMessage) {
+  if (window[globalName]) return window[globalName];
+
+  if (!scriptLoads.has(url)) {
+    scriptLoads.set(
+      url,
+      new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = url;
+        script.async = true;
+        script.onload = resolve;
+        script.onerror = () => reject(new Error(errorMessage));
+        document.head.appendChild(script);
+      })
+    );
+  }
+
+  await scriptLoads.get(url);
+  return waitForGlobal(globalName, errorMessage);
+}
+
+function waitForGlobal(name, errorMessage) {
+  return new Promise((resolve, reject) => {
+    const started = Date.now();
+    const timer = window.setInterval(() => {
+      if (window[name]) {
+        window.clearInterval(timer);
+        resolve(window[name]);
+        return;
+      }
+
+      if (Date.now() - started > 12000) {
+        window.clearInterval(timer);
+        reject(new Error(errorMessage));
+      }
+    }, 80);
+  });
+}
+
+function looksLikeGarbledText(text) {
+  const sample = text.slice(0, 1200);
+  const letters = (sample.match(/[A-Za-z\u0590-\u05ff]/g) || []).length;
+  const symbols = (sample.match(/[^\sA-Za-z0-9\u0590-\u05ff:.,/()\-]/g) || []).length;
+  return sample.length > 120 && letters / sample.length < 0.12 && symbols / sample.length > 0.22;
+}
+
+function setStatus(message, percent = 0, visible = true, isError = false) {
+  extractStatus.classList.toggle("hidden", !visible);
+  extractStatus.classList.toggle("status-error", isError);
+  statusText.textContent = message;
+  statusPercent.textContent = `${Math.round(percent)}%`;
+  progressBar.style.width = `${Math.max(0, Math.min(100, percent))}%`;
+}
+
+function sourceTypeForFile(file) {
+  if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) return "browser_pdf";
+  if (file.type.startsWith("image/")) return "browser_image_ocr";
+  return "browser_text_file";
+}
+
+function formatFileSize(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function guessRoute(rawText) {
@@ -217,6 +418,10 @@ function enrichSegment(segment) {
 function renderTrip(trip) {
   emptyState.classList.add("hidden");
   results.classList.remove("hidden");
+  resultNotice.textContent =
+    currentSourceType === "browser_image_ocr" || currentSourceType === "browser_pdf"
+      ? "Extracted in the browser, then parsed locally. Review OCR text before travel use."
+      : "Running in the browser with the local parser.";
 
   const segment = trip.segments[0] || {};
   const passenger = trip.passengers[0]?.full_name || "-";

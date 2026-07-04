@@ -11,14 +11,16 @@
       <header class="topbar">
         <div>
           <h1>Flights Agent</h1>
+          <p class="subtitle">Extract flight details from text, PDF tickets, and screenshots.</p>
         </div>
-        <span class="pill">GitHub Pages demo</span>
+        <span class="pill">Browser parser</span>
       </header>
 
       <section class="workspace" aria-label="Flight parser workspace">
         <section class="source-panel" aria-labelledby="source-title">
           <div class="section-heading">
             <h2 id="source-title">Source</h2>
+            <p>Paste text or upload a ticket file. PDFs and images are processed in this browser.</p>
           </div>
 
           <div class="mode-row" role="radiogroup" aria-label="Input mode">
@@ -28,10 +30,28 @@
             </label>
             <label>
               <input type="radio" name="mode" value="file">
-              TXT file
+              Upload file
             </label>
           </div>
 
+          <label id="dropZone" class="drop-zone hidden" for="ticketFile">
+            <span class="drop-title">Drop or choose a ticket</span>
+            <span class="drop-detail">PDF, PNG, JPG, JPEG, WebP, or TXT</span>
+            <input id="ticketFile" type="file" accept=".txt,.pdf,.png,.jpg,.jpeg,.webp,text/plain,application/pdf,image/*">
+          </label>
+
+          <div id="fileMeta" class="file-meta hidden"></div>
+          <div id="extractStatus" class="extract-status hidden" role="status" aria-live="polite">
+            <div class="status-row">
+              <span id="statusText">Preparing file...</span>
+              <span id="statusPercent">0%</span>
+            </div>
+            <div class="progress-track" aria-hidden="true">
+              <div id="progressBar" class="progress-bar"></div>
+            </div>
+          </div>
+
+          <label class="text-label" for="ticketText">Extracted ticket text</label>
           <textarea id="ticketText" spellcheck="false">Passenger : Reuven Anat Ms (ADT)
 LY Booking code : YYLXCH
 Ticket number : 1142491403549
@@ -47,8 +67,6 @@ Baggage :
 2PC
 Duration :
 01:05</textarea>
-
-          <input id="ticketFile" class="hidden" type="file" accept=".txt,text/plain">
 
           <div class="actions">
             <button id="analyzeBtn" class="primary" type="button">Analyze ticket</button>
@@ -67,7 +85,7 @@ Duration :
           </div>
 
           <div id="results" class="hidden">
-            <div class="notice">Running in the browser with the local parser.</div>
+            <div id="resultNotice" class="notice">Running in the browser with the local parser.</div>
 
             <div class="summary-grid" id="summaryGrid"></div>
 

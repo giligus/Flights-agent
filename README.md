@@ -57,13 +57,13 @@ This repo supports two public deployment paths:
    - URL after Pages is enabled: `https://giligus.github.io/Flights-agent/`
    - Source folder: `site/`
    - Workflow: `.github/workflows/deploy-pages.yml`
-   - Runs directly in the browser with a local client-side parser.
+   - Runs directly in the browser with PDF text extraction and image/scanned-PDF OCR.
 
 2. Streamlit server app
    - Main file path: `streamlit_flights.py`
    - Supports the full Python flow and the optional Gemini-backed extraction path.
 
-GitHub Pages cannot run the Python/Streamlit server directly, so the Pages version is a static browser app. Use Streamlit Community Cloud or another Python host for the full Streamlit runtime.
+GitHub Pages cannot run the Python/Streamlit server directly, so the Pages version is a static browser app. It can read TXT files, extract digital-PDF text with PDF.js, and OCR images or scanned PDFs with Tesseract.js in the browser. Use Streamlit Community Cloud or another Python host for the full Python runtime, Gemini-backed extraction, and server-side OCR.
 
 ### GitHub Pages
 
