@@ -35,6 +35,14 @@ Set `GEMINI_API_KEY` in `.env` or in the process environment before using the LL
 
 For OCR, install Tesseract locally and make sure it is available on `PATH`, or configure the Tesseract path in the extraction layer.
 
+On Windows, scanned PDFs and image uploads require Tesseract OCR. If it is installed outside `PATH`, set:
+
+```powershell
+$env:TESSERACT_CMD = "C:\Program Files\Tesseract-OCR\tesseract.exe"
+```
+
+Digital PDFs with a usable text layer are parsed without OCR. Garbled airline PDFs and photos need OCR.
+
 ## Run
 
 ```powershell
@@ -90,6 +98,10 @@ GEMINI_API_KEY = "your-key-here"
 ```
 
 The app still runs without `GEMINI_API_KEY` by using the local parser fallback. Add the secret only when you want the Gemini-backed extraction path in the deployed app.
+
+## Travel Requirements
+
+The app derives route legs from the parsed itinerary and shows passenger requirement checkers from TravelDoc/IATA plus official destination-government sources where known. Requirements are not finalized inside the app because visa and entry rules depend on citizenship, passport type, residence permits, transit details, travel date, and stay length.
 
 ## Notes For GitHub
 

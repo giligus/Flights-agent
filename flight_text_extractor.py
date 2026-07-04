@@ -3,6 +3,7 @@ from typing import Optional
 
 # 💡 ייבוא רגיל, בלי הנקודה
 from extract_raw_text import (
+    OcrUnavailableError,
     detect_type,
     read_pdf,
     read_image,
@@ -35,7 +36,7 @@ def clean_for_flight_tickets(text: str) -> str:
 
 
 
-def extract_text_any(path: str, lang: str = "heb+eng", ocr_only: bool = True) -> str:
+def extract_text_any(path: str, lang: str = "heb+eng", ocr_only: bool = False) -> str:
     """
     עטיפה על extract_raw_text.py לשימוש בכרטיסי טיסה.
     ברירת מחדל:

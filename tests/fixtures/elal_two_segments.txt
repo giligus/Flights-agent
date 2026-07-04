@@ -1,0 +1,33 @@
+Passenger : Example Passenger Mr (ADT)
+LY Booking code : Q9TL3N
+Ticket number : 1142490557883
+
+From        To        Flight        Departure        Arrival        Last check-in
+TEL AVIV YAFO BEN GURION INTL  VENICE MARCO POLO        LY289
+                                            18:00
+01Apr2025        20:55
+01Apr2025        ----
+Class :
+Economy (Y)
+Baggage :
+2PC (4)
+Booking status :
+SA (1)
+Duration :
+03:55
+Special Service Request:
+DOCS - PASSENGER/CREW PRIMARY TRAVEL DOCUMENT INFO - CONFIRMED
+MILAN MALPENSA
+Terminal: 1        TEL AVIV YAFO BEN GURION INTL
+Terminal: 3        LY388        22:55
+06Apr2025        03:40
+07Apr2025        ----
+Class :
+Economy (Y)
+Baggage :
+2PC (4)
+Booking status :
+SA (1)
+Duration :
+03:45
+

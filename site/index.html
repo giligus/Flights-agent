@@ -73,11 +73,13 @@ Duration :
 
             <div class="tabs" role="tablist" aria-label="Flight result views">
               <button class="tab active" type="button" data-tab="itinerary">Itinerary</button>
+              <button class="tab" type="button" data-tab="requirements">Requirements</button>
               <button class="tab" type="button" data-tab="table">Table</button>
               <button class="tab" type="button" data-tab="data">Data</button>
             </div>
 
             <section id="itineraryTab" class="tab-panel"></section>
+            <section id="requirementsTab" class="tab-panel hidden"></section>
             <section id="tableTab" class="tab-panel hidden"></section>
             <section id="dataTab" class="tab-panel hidden">
               <button id="downloadBtn" class="secondary" type="button">Download JSON</button>
@@ -91,4 +93,3 @@ Duration :
     <script src="./app.js"></script>
   </body>
 </html>
-

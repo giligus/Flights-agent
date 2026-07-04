@@ -1,7 +1,9 @@
 import re
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional, Tuple
 from uuid import uuid4
 from datetime import datetime
+
+from airports_data import AIRPORTS_BY_IATA, CITY_KEYWORDS_TO_IATA
 
 # Codes that should NOT be treated as airports
 IATA_BLACKLIST = {
@@ -51,6 +53,131 @@ def _parse_ddmmmyyyy_hhmm(s: str) -> str | None:
         return None
     dt = datetime(year, mon, day, hour, minute)
     return dt.isoformat(timespec="seconds")
+
+
+def _normalize_iata(value: Optional[str]) -> Optional[str]:
+    if not value:
+        return None
+    value = value.upper().strip()
+    if value in IATA_BLACKLIST:
+        return None
+    return value if value in AIRPORTS_BY_IATA else None
+
+
+def _ordered_iata_mentions(text: str) -> List[str]:
+    upper = text.upper()
+    mentions: List[Tuple[int, str]] = []
+
+    for match in re.finditer(r"\(([A-Z]{3})\)", upper):
+        iata = _normalize_iata(match.group(1))
+        if iata:
+            mentions.append((match.start(), iata))
+
+    for keyword, iata in CITY_KEYWORDS_TO_IATA:
+        start = upper.find(keyword)
+        if start >= 0:
+            mentions.append((start, iata))
+
+    seen = set()
+    ordered = []
+    for _, iata in sorted(mentions, key=lambda item: item[0]):
+        if iata not in seen:
+            ordered.append(iata)
+            seen.add(iata)
+    return ordered
+
+
+def _city_from_iata(iata: Optional[str]) -> Optional[str]:
+    if not iata:
+        return None
+    meta = AIRPORTS_BY_IATA.get(iata)
+    return meta["city"] if meta else None
+
+
+def _clean_route_context(lines: List[str]) -> str:
+    noise = re.compile(
+        r"^(FROM|TO|FLIGHT|CLASS|OPERATED|MARKETED|BAGGAGE|BOOKING|FARE|DURATION|"
+        r"SPECIAL|REQUEST|DOCS|TERMINAL\s*:?\s*\d*\s*)$",
+        re.IGNORECASE,
+    )
+    cleaned = []
+    for line in lines:
+        line = re.sub(r"Terminal\s*:\s*\d+", " ", line, flags=re.IGNORECASE).strip()
+        if line and not noise.match(line):
+            cleaned.append(line)
+    return "\n".join(cleaned)
+
+
+def _parse_segment_datetimes(context: str) -> Tuple[Optional[str], Optional[str]]:
+    date_matches = re.findall(r"\b(\d{1,2}[A-Za-z]{3}\d{2,4})\b", context)
+    time_matches = re.findall(r"\b(\d{1,2}:\d{2})\b", context)
+
+    if date_matches and time_matches:
+        dep_date = date_matches[0]
+        arr_date = date_matches[1] if len(date_matches) > 1 else dep_date
+        dep_time = time_matches[0]
+        arr_time = time_matches[1] if len(time_matches) > 1 else None
+        return (
+            parse_mixed_date(dep_date, dep_time),
+            parse_mixed_date(arr_date, arr_time) if arr_time else None,
+        )
+
+    return None, None
+
+
+def _extract_ticket_table_segments(text: str, pnr: Optional[str], ticket_number: Optional[str]) -> List[Dict[str, Any]]:
+    lines = [line.strip() for line in text.replace("\t", "  ").splitlines() if line.strip()]
+    segments: List[Dict[str, Any]] = []
+
+    for index, line in enumerate(lines):
+        flight_match = re.search(r"\b([A-Z]{2})\s?(\d{2,4})\b", line)
+        if not flight_match:
+            continue
+
+        airline_code, flight_number = flight_match.groups()
+        if airline_code in {"ID", "AP"}:
+            continue
+
+        before_lines = lines[max(0, index - 3):index]
+        route_prefix = line[:flight_match.start()].strip()
+        route_context = _clean_route_context(before_lines + [route_prefix])
+        ordered_iatas = _ordered_iata_mentions(route_context)
+
+        if len(ordered_iatas) < 2:
+            wider_context = _clean_route_context(lines[max(0, index - 5):index + 2])
+            ordered_iatas = _ordered_iata_mentions(wider_context)
+
+        dep_iata = ordered_iatas[0] if ordered_iatas else None
+        arr_iata = ordered_iatas[1] if len(ordered_iatas) > 1 else None
+
+        after_context = "\n".join(lines[index:index + 20])
+        dep_dt, arr_dt = _parse_segment_datetimes(after_context)
+
+        duration_match = re.search(r"Duration\s*:\s*(\d{1,2}:\d{2})", after_context, flags=re.IGNORECASE)
+        baggage_match = re.search(r"Baggage\s*:\s*([0-9A-Z ()]+)", after_context, flags=re.IGNORECASE)
+        class_match = re.search(r"Economy\s*\(([A-Z])\)", after_context, flags=re.IGNORECASE)
+
+        segments.append(
+            {
+                "airline_code": airline_code,
+                "flight_number": flight_number,
+                "pnr": pnr,
+                "ticket_number": ticket_number,
+                "departure_city": _city_from_iata(dep_iata),
+                "arrival_city": _city_from_iata(arr_iata),
+                "departure_airport": dep_iata,
+                "arrival_airport": arr_iata,
+                "departure_datetime_local": dep_dt,
+                "arrival_datetime_local": arr_dt,
+                "booking_class": class_match.group(1) if class_match else None,
+                "baggage_allowance": baggage_match.group(1).strip() if baggage_match else None,
+                "duration": duration_match.group(1) if duration_match else None,
+                "seat": None,
+                "gate": None,
+            }
+        )
+
+    return segments
 
 
 def parse_flight_ticket_text(raw_text: str) -> Dict[str, Any]:
@@ -312,13 +439,9 @@ def parse_flight_ticket_text(raw_text: str) -> Dict[str, Any]:
     if gate_match:
         gate = gate_match.group(1)
 
-    # ---------------------------
-    # Final structure
-    # ---------------------------
-    trip = {
-        "trip_id": f"TRIP-{uuid4()}",
-        "passengers": passengers,
-        "segments": [
+    table_segments = _extract_ticket_table_segments(text, pnr, ticket_number)
+    if not table_segments:
+        table_segments = [
             {
                 "airline_code": airline_code,
                 "flight_number": flight_number,
@@ -336,7 +459,15 @@ def parse_flight_ticket_text(raw_text: str) -> Dict[str, Any]:
                 "seat": seat,
                 "gate": gate,
             }
-        ],
+        ]
+
+    # ---------------------------
+    # Final structure
+    # ---------------------------
+    trip = {
+        "trip_id": f"TRIP-{uuid4()}",
+        "passengers": passengers,
+        "segments": table_segments,
         "meta": {"raw_source_type": "text"},
     }
 

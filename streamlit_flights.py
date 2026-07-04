@@ -8,9 +8,11 @@ import pandas as pd
 import streamlit as st
 
 from enrichment_flights import enrich_trip_with_airport_data
+from extract_raw_text import OcrUnavailableError
 from flight_text_extractor import extract_text_any
 from parser_flights import parse_flight_ticket_text
 from query_flight_ticket import call_llm
+from travel_requirements import build_requirement_sources
 
 
 DISPLAY_COLUMNS = {
@@ -160,6 +162,26 @@ def apply_theme() -> None:
             border-radius: 8px;
             padding: 1rem;
             margin-bottom: 0.75rem;
+        }
+
+        .requirement-card {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .requirement-card a {
+            color: var(--teal);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .requirement-note {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-top: 0.35rem;
         }
 
         .segment-route {
@@ -459,6 +481,58 @@ def render_segment_cards(trip: dict) -> None:
         )
 
 
+def render_requirements(trip: dict) -> None:
+    sources = build_requirement_sources(trip)
+    route = " / ".join(
+        f"{segment['departure_airport'] or '-'} to {segment['arrival_airport'] or '-'}"
+        for segment in sources["route_segments"]
+    ) or "-"
+    destination = sources["destination_name"]
+
+    st.info(
+        "Travel requirements depend on citizenship, passport type, residence permits, transit, "
+        "stay length, and current rules. Use the official checkers below before travel."
+    )
+
+    st.markdown(
+        f"""
+        <div class="requirement-card">
+            <div class="summary-label">Route basis</div>
+            <div class="summary-value">{html_value(route)} / {html_value(destination)}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown("#### Official checkers")
+    for source in sources["global_checkers"]:
+        st.markdown(
+            f"""
+            <div class="requirement-card">
+                <a href="{source['url']}" target="_blank" rel="noopener noreferrer">{html_value(source['label'])}</a>
+                <div class="requirement-note">{html_value(source['note'])}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    if sources["destination_sources"]:
+        st.markdown("#### Destination government sources")
+        for source in sources["destination_sources"]:
+            st.markdown(
+                f"""
+                <div class="requirement-card">
+                    <a href="{source['url']}" target="_blank" rel="noopener noreferrer">{html_value(source['label'])}</a>
+                    <div class="requirement-note">{html_value(source['note'])}</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+    st.markdown("#### Needed passenger inputs")
+    st.markdown("\n".join(f"- {item}" for item in sources["required_inputs"]))
+
+
 def extract_from_upload(uploaded_file) -> str:
     suffix = Path(uploaded_file.name).suffix
     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
@@ -466,7 +540,7 @@ def extract_from_upload(uploaded_file) -> str:
         tmp_path = tmp.name
 
     try:
-        return extract_text_any(tmp_path, lang="eng", ocr_only=True)
+        return extract_text_any(tmp_path, lang="heb+eng", ocr_only=False)
     finally:
         Path(tmp_path).unlink(missing_ok=True)
 
@@ -500,10 +574,15 @@ def render_results(trip: dict, raw_text: str) -> None:
 
     render_summary(build_summary(trip))
 
-    tab_itinerary, tab_table, tab_data = st.tabs(["Itinerary", "Table", "Data"])
+    tab_itinerary, tab_requirements, tab_table, tab_data = st.tabs(
+        ["Itinerary", "Requirements", "Table", "Data"]
+    )
 
     with tab_itinerary:
         render_segment_cards(trip)
+
+    with tab_requirements:
+        render_requirements(trip)
 
     with tab_table:
         df = convert_headers(trip_to_dataframe(trip))
@@ -570,7 +649,16 @@ def main() -> None:
                     st.warning("Upload a ticket file first.")
                     return
                 with st.spinner("Extracting ticket text..."):
-                    raw_text = extract_from_upload(uploaded_file)
+                    try:
+                        raw_text = extract_from_upload(uploaded_file)
+                    except OcrUnavailableError as ex:
+                        st.error(str(ex))
+                        st.info(
+                            "For Windows local runs, install Tesseract OCR and make sure "
+                            "`tesseract.exe` is on PATH, or set `TESSERACT_CMD` to its full path. "
+                            "The GitHub/Streamlit deployment uses `packages.txt` to install OCR."
+                        )
+                        return
             else:
                 raw_text = raw_text_input.strip()
                 if not raw_text:

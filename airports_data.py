@@ -26,6 +26,38 @@ AIRPORTS_BY_IATA = {
         "country_code": "GB",
         "timezone": "Europe/London",
     },
+    "VCE": {
+        "iata": "VCE",
+        "name": "Venice Marco Polo",
+        "city": "Venice",
+        "country_name": "Italy",
+        "country_code": "IT",
+        "timezone": "Europe/Rome",
+    },
+    "MXP": {
+        "iata": "MXP",
+        "name": "Milan Malpensa",
+        "city": "Milan",
+        "country_name": "Italy",
+        "country_code": "IT",
+        "timezone": "Europe/Rome",
+    },
+    "DXB": {
+        "iata": "DXB",
+        "name": "Dubai International",
+        "city": "Dubai",
+        "country_name": "United Arab Emirates",
+        "country_code": "AE",
+        "timezone": "Asia/Dubai",
+    },
+    "HKT": {
+        "iata": "HKT",
+        "name": "Phuket International",
+        "city": "Phuket",
+        "country_name": "Thailand",
+        "country_code": "TH",
+        "timezone": "Asia/Bangkok",
+    },
     # אפשר להוסיף כאן שדות נוספים בעתיד
 }
 
@@ -36,4 +68,11 @@ CITY_KEYWORDS_TO_IATA = [
     ("BEN GURION", "TLV"),
     ("TEL AVIV YAFO BEN GURION INTL", "TLV"),
     ("TEL AVIV", "TLV"),
+    ("VENICE MARCO POLO", "VCE"),
+    ("VENICE", "VCE"),
+    ("MILAN MALPENSA", "MXP"),
+    ("MALPENSA", "MXP"),
+    ("DUBAI INTL", "DXB"),
+    ("DUBAI", "DXB"),
+    ("PHUKET", "HKT"),
 ]

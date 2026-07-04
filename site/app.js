@@ -47,6 +47,7 @@ const emptyState = document.querySelector("#emptyState");
 const results = document.querySelector("#results");
 const summaryGrid = document.querySelector("#summaryGrid");
 const itineraryTab = document.querySelector("#itineraryTab");
+const requirementsTab = document.querySelector("#requirementsTab");
 const tableTab = document.querySelector("#tableTab");
 const dataTab = document.querySelector("#dataTab");
 const jsonOutput = document.querySelector("#jsonOutput");
@@ -100,6 +101,7 @@ document.querySelectorAll(".tab").forEach((button) => {
     button.classList.add("active");
     const active = button.dataset.tab;
     itineraryTab.classList.toggle("hidden", active !== "itinerary");
+    requirementsTab.classList.toggle("hidden", active !== "requirements");
     tableTab.classList.toggle("hidden", active !== "table");
     dataTab.classList.toggle("hidden", active !== "data");
   });
@@ -238,6 +240,7 @@ function renderTrip(trip) {
     .join("");
 
   itineraryTab.innerHTML = trip.segments.map(renderSegment).join("");
+  requirementsTab.innerHTML = renderRequirements(trip);
   tableTab.innerHTML = renderTable(trip);
   jsonOutput.textContent = JSON.stringify(trip, null, 2);
 }
@@ -303,6 +306,111 @@ function renderTable(trip) {
   `;
 }
 
+function renderRequirements(trip) {
+  const sources = buildRequirementSources(trip);
+  const route = sources.routeSegments
+    .map((segment) => `${segment.departure_airport || "-"} to ${segment.arrival_airport || "-"}`)
+    .join(" / ");
+
+  return `
+    <div class="notice">
+      Travel requirements depend on citizenship, passport type, residence permits, transit,
+      stay length, and current rules. Use official checkers before travel.
+    </div>
+    <article class="requirement-card">
+      <div class="summary-label">Route basis</div>
+      <div class="summary-value">${escapeHtml(route || "-")} / ${escapeHtml(sources.destinationName)}</div>
+    </article>
+    <h3>Official checkers</h3>
+    ${sources.globalCheckers.map(renderRequirementSource).join("")}
+    <h3>Destination government sources</h3>
+    ${sources.destinationSources.map(renderRequirementSource).join("")}
+    <h3>Needed passenger inputs</h3>
+    <ul>
+      ${sources.requiredInputs.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+    </ul>
+  `;
+}
+
+function renderRequirementSource(source) {
+  return `
+    <article class="requirement-card">
+      <a href="${source.url}" target="_blank" rel="noopener noreferrer">${escapeHtml(source.label)}</a>
+      <div class="requirement-note">${escapeHtml(source.note)}</div>
+    </article>
+  `;
+}
+
+function buildRequirementSources(trip) {
+  const globalCheckers = [
+    {
+      label: "TravelDoc.aero",
+      url: "https://www.traveldoc.aero/",
+      note: "Airline-style document, visa, passport, and health checker.",
+    },
+    {
+      label: "IATA Travel Centre",
+      url: "https://www.iatatravelcentre.com/",
+      note: "IATA passenger travel-document checker.",
+    },
+  ];
+
+  const byCountry = {
+    CY: [{ label: "Gov.cy visa information", url: "https://www.gov.cy/en/information/visas/", note: "Official Cyprus government visa information." }],
+    IT: [{ label: "Visa for Italy", url: "https://vistoperitalia.esteri.it/", note: "Official Italian Ministry of Foreign Affairs visa checker." }],
+    GB: [{ label: "GOV.UK visa checker", url: "https://www.gov.uk/check-uk-visa", note: "Official UK visa and ETA checker." }],
+    AE: [{ label: "UAE government tourist visa", url: "https://u.ae/en/information-and-services/visa-and-emirates-id/tourist-visa", note: "Official UAE government tourist visa guidance." }],
+    TH: [{ label: "Thailand e-Visa", url: "https://www.thaievisa.go.th/", note: "Official Thailand Ministry of Foreign Affairs e-Visa portal." }],
+    IL: [{ label: "ETA-IL official authority", url: "https://israel-entry.piba.gov.il/learn-about", note: "Official Israel Population and Immigration Authority ETA-IL portal." }],
+  };
+
+  const routeSegments = trip.segments.map((segment) => ({
+    departure_airport: segment.departure_airport,
+    arrival_airport: segment.arrival_airport,
+    arrival_country_code: countryCodeForAirport(segment.arrival_airport),
+    arrival_country_name: segment.arrival_country_name,
+  }));
+
+  const destinationNames = [...new Set(routeSegments.map((segment) => segment.arrival_country_name).filter(Boolean))];
+  const seen = new Set();
+  const destinationSources = [];
+  for (const segment of routeSegments) {
+    for (const source of byCountry[segment.arrival_country_code] || []) {
+      if (!seen.has(source.url)) {
+        destinationSources.push(source);
+        seen.add(source.url);
+      }
+    }
+  }
+
+  return {
+    routeSegments,
+    destinationName: destinationNames.join(", ") || "the destination",
+    globalCheckers,
+    destinationSources,
+    requiredInputs: [
+      "Passenger citizenship/nationality",
+      "Passport type and expiry date",
+      "Residence country or visa/residence permits held",
+      "Transit airports and whether the passenger leaves airside transit",
+      "Final travel date and length of stay",
+    ],
+  };
+}
+
+function countryCodeForAirport(iata) {
+  const airport = airports[iata] || {};
+  const byCountryName = {
+    Israel: "IL",
+    Cyprus: "CY",
+    Italy: "IT",
+    "United Kingdom": "GB",
+    "United Arab Emirates": "AE",
+    Thailand: "TH",
+  };
+  return byCountryName[airport.country] || "";
+}
+
 function matchFirst(text, patterns) {
   for (const pattern of patterns) {
     const match = text.match(pattern);
@@ -326,4 +434,3 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
-

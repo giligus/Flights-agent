@@ -30,9 +30,11 @@ jobs:
       - name: Compile Python files
         run: python -m py_compile streamlit_flights.py query_flight_ticket.py enrichment_flights.py flight_text_extractor.py extract_raw_text.py
 
+      - name: Run parser regression tests
+        run: python -m unittest discover -s tests
+
       - name: Start Streamlit
         run: |
           python -m streamlit run streamlit_flights.py --server.headless true --server.port 8501 &
           sleep 8
           curl --fail http://localhost:8501
-

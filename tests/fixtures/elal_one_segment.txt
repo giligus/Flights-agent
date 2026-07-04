@@ -1,0 +1,18 @@
+Passenger : Example Traveler Ms (ADT)
+LY Booking code : YYLXCH
+Ticket number : 1142491403549
+
+From        To        Flight        Departure        Arrival        Last check-in
+LARNACA LARNACA        TEL AVIV YAFO BEN GURION INTL
+Terminal: 3        LY5136        00:50
+01Jul2025        01:55
+01Jul2025        ----
+Class :
+Economy (Y)
+Baggage :
+2PC (4)
+Booking status :
+SA (1)
+Duration :
+01:05
+
