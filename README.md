@@ -41,6 +41,28 @@ For OCR, install Tesseract locally and make sure it is available on `PATH`, or c
 streamlit run streamlit_flights.py
 ```
 
+## Deploy From GitHub
+
+GitHub stores the app code, but GitHub Pages cannot run this app because it is a Python/Streamlit server. To make it public, deploy the GitHub repo through Streamlit Community Cloud or another Python app host.
+
+### Streamlit Community Cloud
+
+Use these settings:
+
+- Repository: `giligus/Flights-agent`
+- Branch: `main`
+- Main file path: `streamlit_flights.py`
+- Python runtime: `python-3.11` from `runtime.txt`
+- System packages: `packages.txt` installs Tesseract for OCR
+
+Optional app secret:
+
+```toml
+GEMINI_API_KEY = "your-key-here"
+```
+
+The app still runs without `GEMINI_API_KEY` by using the local parser fallback. Add the secret only when you want the Gemini-backed extraction path in the deployed app.
+
 ## Notes For GitHub
 
 The repository intentionally ignores local secrets, uploaded tickets, screenshots, PDFs, backups, and Python cache files. Keep real passenger data out of git unless it is fully sanitized.

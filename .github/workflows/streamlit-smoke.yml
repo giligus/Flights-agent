@@ -1,0 +1,38 @@
+name: Streamlit smoke test
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install system packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tesseract-ocr tesseract-ocr-eng
+
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Compile Python files
+        run: python -m py_compile streamlit_flights.py query_flight_ticket.py enrichment_flights.py flight_text_extractor.py extract_raw_text.py
+
+      - name: Start Streamlit
+        run: |
+          python -m streamlit run streamlit_flights.py --server.headless true --server.port 8501 &
+          sleep 8
+          curl --fail http://localhost:8501
+
