@@ -1,206 +1,598 @@
+import json
 import os
 import tempfile
-import streamlit as st
+from html import escape
+from pathlib import Path
+
 import pandas as pd
-import subprocess
-import json
+import streamlit as st
 
-from flight_text_extractor import extract_text_any          # OCR חדש
-from parser_flights import parse_flight_ticket_text         # Parser המקורי
-from enrichment_flights import enrich_trip_with_airport_data  # העשרה
+from enrichment_flights import enrich_trip_with_airport_data
+from flight_text_extractor import extract_text_any
+from parser_flights import parse_flight_ticket_text
+from query_flight_ticket import call_llm
 
 
-HEBREW_HEADERS = {
-    "full_name": "שם נוסע",
-    "airline_code": "קוד חברת תעופה",
-    "flight_number": "מספר טיסה",
-    "pnr": "קוד הזמנה (PNR)",
-    "ticket_number": "מספר כרטיס טיסה",
-    "departure_city": "עיר יציאה",
-    "arrival_city": "עיר יעד",
-    "departure_airport": "שדה יציאה (IATA)",
-    "arrival_airport": "שדה נחיתה (IATA)",
-    "departure_country_name": "מדינת יציאה",
-    "arrival_country_name": "מדינת יעד",
-    "departure_country_code": "קוד מדינת יציאה",
-    "arrival_country_code": "קוד מדינת יעד",
-    "departure_timezone": "אזור זמן יציאה",
-    "arrival_timezone": "אזור זמן יעד",
-    "departure_datetime_local": "זמן המראה",
-    "arrival_datetime_local": "זמן נחיתה",
-    "booking_class": "מחלקה",
-    "baggage_allowance": "כבודה",
-    "duration": "משך טיסה",
-    "seat": "מושב",
-    "gate": "שער עלייה למטוס",
+DISPLAY_COLUMNS = {
+    "full_name": "Passenger",
+    "airline_code": "Airline",
+    "flight_number": "Flight",
+    "pnr": "PNR",
+    "ticket_number": "Ticket",
+    "departure_city": "From city",
+    "arrival_city": "To city",
+    "departure_airport": "From",
+    "arrival_airport": "To",
+    "departure_country_name": "Origin country",
+    "arrival_country_name": "Destination country",
+    "departure_country_code": "Origin code",
+    "arrival_country_code": "Destination code",
+    "departure_timezone": "Origin timezone",
+    "arrival_timezone": "Destination timezone",
+    "departure_datetime_local": "Departure",
+    "arrival_datetime_local": "Arrival",
+    "booking_class": "Class",
+    "baggage_allowance": "Baggage",
+    "duration": "Duration",
+    "seat": "Seat",
+    "gate": "Gate",
 }
+
+
+SAMPLE_TEXT = """Passenger : Reuven Anat Ms (ADT)
+LY Booking code : YYLXCH
+Ticket number : 1142491403549
+
+From        To        Flight        Departure        Arrival
+LARNACA LARNACA        TEL AVIV YAFO BEN GURION INTL
+Terminal: 3        LY5136        00:50
+01Jul2025        01:55
+01Jul2025
+Class :
+Economy (Y)
+Baggage :
+2PC
+Duration :
+01:05
+"""
+
+
+def apply_theme() -> None:
+    st.markdown(
+        """
+        <style>
+        :root {
+            --ink: #17202a;
+            --muted: #5f6b7a;
+            --line: #dde5ec;
+            --surface: #ffffff;
+            --soft: #f5f8fa;
+            --teal: #167d7f;
+            --coral: #d9674e;
+            --gold: #b0822b;
+        }
+
+        .stApp {
+            background:
+                linear-gradient(180deg, #f7faf9 0%, #eef4f1 42%, #f9faf8 100%);
+            color: var(--ink);
+        }
+
+        .block-container {
+            max-width: 1180px;
+            padding-top: 2rem;
+            padding-bottom: 3rem;
+        }
+
+        h1, h2, h3 {
+            letter-spacing: 0;
+        }
+
+        .app-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            border-bottom: 1px solid var(--line);
+            padding-bottom: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .app-title h1 {
+            font-size: 2rem;
+            line-height: 1.1;
+            margin: 0;
+            color: var(--ink);
+        }
+
+        .status-pill {
+            border: 1px solid rgba(22, 125, 127, 0.28);
+            color: var(--teal);
+            background: rgba(22, 125, 127, 0.08);
+            border-radius: 999px;
+            padding: 0.35rem 0.75rem;
+            font-size: 0.82rem;
+            white-space: nowrap;
+        }
+
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 14px 36px rgba(23, 32, 42, 0.07);
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.75rem;
+            margin: 1rem 0;
+        }
+
+        .summary-tile {
+            min-height: 94px;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 0.85rem;
+        }
+
+        .summary-label {
+            color: var(--muted);
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            margin-bottom: 0.4rem;
+        }
+
+        .summary-value {
+            color: var(--ink);
+            font-size: 1.15rem;
+            font-weight: 700;
+            line-height: 1.2;
+            overflow-wrap: anywhere;
+        }
+
+        .segment-card {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .segment-route {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .airport-code {
+            font-size: 1.55rem;
+            line-height: 1;
+            font-weight: 800;
+            color: var(--ink);
+        }
+
+        .airport-city {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+            overflow-wrap: anywhere;
+        }
+
+        .route-line {
+            flex: 1;
+            min-width: 48px;
+            border-top: 2px solid rgba(217, 103, 78, 0.52);
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.75rem;
+        }
+
+        .detail-label {
+            color: var(--muted);
+            font-size: 0.78rem;
+        }
+
+        .detail-value {
+            color: var(--ink);
+            font-weight: 650;
+            overflow-wrap: anywhere;
+        }
+
+        div.stButton > button:first-child {
+            width: 100%;
+            border-radius: 8px;
+            border: 1px solid #126a6c;
+            background: #167d7f;
+            color: white;
+            font-weight: 700;
+            min-height: 2.85rem;
+        }
+
+        div.stButton > button:first-child:focus,
+        div.stButton > button:first-child:hover {
+            border-color: #126a6c;
+            box-shadow: 0 0 0 0.16rem rgba(22, 125, 127, 0.18);
+            color: white;
+        }
+
+        div.stDownloadButton > button:first-child {
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            background: white;
+            color: var(--ink);
+            min-height: 2.5rem;
+        }
+
+        div[data-baseweb="tab-list"] {
+            gap: 0.5rem;
+        }
+
+        div[data-baseweb="tab"] {
+            border-radius: 8px 8px 0 0;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        @media (max-width: 900px) {
+            .app-title {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .summary-grid,
+            .detail-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 620px) {
+            .summary-grid,
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .segment-route {
+                align-items: flex-start;
+            }
+
+            .airport-code {
+                font-size: 1.25rem;
+            }
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def display_value(value, fallback: str = "-") -> str:
+    if value is None:
+        return fallback
+    text = str(value).strip()
+    return text if text else fallback
+
+
+def html_value(value, fallback: str = "-") -> str:
+    return escape(display_value(value, fallback))
+
+
+def format_datetime(value) -> str:
+    text = display_value(value)
+    if text == "-":
+        return text
+    text = text.replace("T", " ")
+    if text.endswith(":00"):
+        text = text[:-3]
+    return text
 
 
 def convert_headers(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
-    df.columns = [HEBREW_HEADERS.get(col, col) for col in df.columns]
+    df.columns = [DISPLAY_COLUMNS.get(col, col) for col in df.columns]
     return df
 
 
 def trip_to_dataframe(trip: dict) -> pd.DataFrame:
-    """
-    מקבל אובייקט trip מ-parse_flight_ticket_text + enrich_trip_with_airport_data
-    ומחזיר DataFrame עם שורה לכל קטע טיסה (segment).
-    """
     passengers = trip.get("passengers", [])
     segments = trip.get("segments", [])
-     # הערכים נמצאים ברמת ה-segment, לא ברמת ה-trip
-    # נמשוך מה-segment עצמו בתוך הלולאה
+    full_name = ""
 
-    # כרגע נניח נוסע אחד עיקרי – אם תרצה נתמוך בריבוי נוסעים אחר כך
-    full_name = None
     if passengers:
-        full_name = passengers[0].get("full_name")
+        full_name = passengers[0].get("full_name", "")
 
     rows = []
     for seg in segments:
-        row = {
-            "full_name": full_name,
-            "airline_code": seg.get("airline_code"),
-            "flight_number": seg.get("flight_number"),
-            "pnr": seg.get("pnr"),
-            "ticket_number": seg.get("ticket_number"),
-            "departure_city": seg.get("departure_city"),
-            "arrival_city": seg.get("arrival_city"),
-            "departure_airport": seg.get("departure_airport"),
-            "arrival_airport": seg.get("arrival_airport"),
-            "departure_country_name": seg.get("departure_country_name"),
-            "arrival_country_name": seg.get("arrival_country_name"),
-            "departure_country_code": seg.get("departure_country_code"),
-            "arrival_country_code": seg.get("arrival_country_code"),
-            "departure_timezone": seg.get("departure_timezone"),
-            "arrival_timezone": seg.get("arrival_timezone"),
-            "departure_datetime_local": seg.get("departure_datetime_local"),
-            "arrival_datetime_local": seg.get("arrival_datetime_local"),
-            "booking_class": seg.get("booking_class"),
-            "baggage_allowance": seg.get("baggage_allowance"),
-            "duration": seg.get("duration"),
-            "seat": seg.get("seat"),
-            "gate": seg.get("gate"),
-        }
-        rows.append(row)
+        rows.append(
+            {
+                "full_name": full_name,
+                "airline_code": seg.get("airline_code", ""),
+                "flight_number": seg.get("flight_number", ""),
+                "pnr": seg.get("pnr", ""),
+                "ticket_number": seg.get("ticket_number", ""),
+                "departure_city": seg.get("departure_city", ""),
+                "arrival_city": seg.get("arrival_city", ""),
+                "departure_airport": seg.get("departure_airport", ""),
+                "arrival_airport": seg.get("arrival_airport", ""),
+                "departure_country_name": seg.get("departure_country_name", ""),
+                "arrival_country_name": seg.get("arrival_country_name", ""),
+                "departure_country_code": seg.get("departure_country_code", ""),
+                "arrival_country_code": seg.get("arrival_country_code", ""),
+                "departure_timezone": seg.get("departure_timezone", ""),
+                "arrival_timezone": seg.get("arrival_timezone", ""),
+                "departure_datetime_local": seg.get("departure_datetime_local", ""),
+                "arrival_datetime_local": seg.get("arrival_datetime_local", ""),
+                "booking_class": seg.get("booking_class", ""),
+                "baggage_allowance": seg.get("baggage_allowance", ""),
+                "duration": seg.get("duration", ""),
+                "seat": seg.get("seat", ""),
+                "gate": seg.get("gate", ""),
+            }
+        )
+
+    return pd.DataFrame(rows, columns=list(DISPLAY_COLUMNS.keys()))
 
 
-    if not rows:
-        return pd.DataFrame(columns=list(HEBREW_HEADERS.keys()))
+def build_summary(trip: dict) -> dict:
+    passengers = trip.get("passengers", [])
+    segments = trip.get("segments", [])
+    first_segment = segments[0] if segments else {}
+    last_segment = segments[-1] if segments else {}
 
-    return pd.DataFrame(rows)
+    passenger = "-"
+    if passengers:
+        passenger = display_value(passengers[0].get("full_name"))
+
+    route = "-"
+    if first_segment or last_segment:
+        start = display_value(first_segment.get("departure_airport"))
+        end = display_value(last_segment.get("arrival_airport"))
+        route = f"{start} to {end}" if start != "-" or end != "-" else "-"
+
+    flight = "-"
+    airline = display_value(first_segment.get("airline_code"), "")
+    number = display_value(first_segment.get("flight_number"), "")
+    if airline or number:
+        flight = f"{airline} {number}".strip()
+
+    return {
+        "Passenger": passenger,
+        "Route": route,
+        "Segments": str(len(segments)),
+        "First flight": flight,
+    }
 
 
-def main():
-    st.set_page_config(page_title="Flight Ticket Parser", layout="wide")
-    st.title("✈️ סוכן טיסות – חילוץ וניתוח כרטיסי טיסה")
+def render_header() -> None:
+    st.markdown(
+        """
+        <div class="app-title">
+            <div>
+                <h1>Flights Agent</h1>
+            </div>
+            <div class="status-pill">Flight booking parser</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-    col_input, col_output = st.columns(2)
 
-    with col_input:
-        st.markdown("### מקור הנתונים")
+def render_summary(summary: dict) -> None:
+    columns = st.columns(len(summary))
+    for column, (label, value) in zip(columns, summary.items()):
+        with column:
+            st.markdown(
+                f"""
+                <div class="summary-tile">
+                    <div class="summary-label">{escape(label)}</div>
+                    <div class="summary-value">{escape(value)}</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
-        mode = st.radio(
-            "איך תרצה לספק את הכרטיס?",
-            options=["הדבקת טקסט", "העלאת קובץ (PDF / תמונה / TXT)"],
+
+def render_segment_cards(trip: dict) -> None:
+    segments = trip.get("segments", [])
+    if not segments:
+        st.info("No flight segments were detected.")
+        return
+
+    for index, seg in enumerate(segments, start=1):
+        dep_code = html_value(seg.get("departure_airport"))
+        arr_code = html_value(seg.get("arrival_airport"))
+        dep_city = html_value(seg.get("departure_city"))
+        arr_city = html_value(seg.get("arrival_city"))
+        flight = " ".join(
+            part
+            for part in [
+                display_value(seg.get("airline_code"), ""),
+                display_value(seg.get("flight_number"), ""),
+            ]
+            if part
+        )
+
+        st.markdown(
+            f"""
+            <div class="segment-card">
+                <div class="summary-label">Segment {index}</div>
+                <div class="segment-route">
+                    <div>
+                        <div class="airport-code">{dep_code}</div>
+                        <div class="airport-city">{dep_city}</div>
+                    </div>
+                    <div class="route-line"></div>
+                    <div style="text-align: right;">
+                        <div class="airport-code">{arr_code}</div>
+                        <div class="airport-city">{arr_city}</div>
+                    </div>
+                </div>
+                <div class="detail-grid">
+                    <div>
+                        <div class="detail-label">Flight</div>
+                        <div class="detail-value">{html_value(flight)}</div>
+                    </div>
+                    <div>
+                        <div class="detail-label">Departure</div>
+                        <div class="detail-value">{html_value(format_datetime(seg.get("departure_datetime_local")))}</div>
+                    </div>
+                    <div>
+                        <div class="detail-label">Arrival</div>
+                        <div class="detail-value">{html_value(format_datetime(seg.get("arrival_datetime_local")))}</div>
+                    </div>
+                    <div>
+                        <div class="detail-label">PNR</div>
+                        <div class="detail-value">{html_value(seg.get("pnr"))}</div>
+                    </div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
+def extract_from_upload(uploaded_file) -> str:
+    suffix = Path(uploaded_file.name).suffix
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+        tmp.write(uploaded_file.read())
+        tmp_path = tmp.name
+
+    try:
+        return extract_text_any(tmp_path, lang="eng", ocr_only=True)
+    finally:
+        Path(tmp_path).unlink(missing_ok=True)
+
+
+def parse_trip(raw_text: str) -> dict:
+    if not (os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")):
+        fallback_trip = parse_flight_ticket_text(raw_text)
+        fallback_trip["warning"] = "Using local parser fallback."
+        return enrich_trip_with_airport_data(fallback_trip)
+
+    trip = call_llm(raw_text)
+    if not isinstance(trip, dict):
+        return {"passengers": [], "segments": [], "error": "Parser returned an invalid response."}
+
+    if trip.get("error"):
+        fallback_trip = parse_flight_ticket_text(raw_text)
+        fallback_trip["warning"] = "Using local parser fallback."
+        return enrich_trip_with_airport_data(fallback_trip)
+
+    return enrich_trip_with_airport_data(trip)
+
+
+def render_results(trip: dict, raw_text: str) -> None:
+    error = trip.get("error")
+    if error:
+        st.error(error)
+
+    warning = trip.get("warning")
+    if warning:
+        st.warning(warning)
+
+    render_summary(build_summary(trip))
+
+    tab_itinerary, tab_table, tab_data = st.tabs(["Itinerary", "Table", "Data"])
+
+    with tab_itinerary:
+        render_segment_cards(trip)
+
+    with tab_table:
+        df = convert_headers(trip_to_dataframe(trip))
+        st.dataframe(df, use_container_width=True, hide_index=True)
+
+    with tab_data:
+        json_text = json.dumps(trip, ensure_ascii=False, indent=2)
+        st.download_button(
+            "Download JSON",
+            data=json_text,
+            file_name="flight_trip.json",
+            mime="application/json",
+        )
+        st.json(trip)
+        with st.expander("Raw extracted text"):
+            st.text_area("Raw text", raw_text, height=220, label_visibility="collapsed")
+
+
+def main() -> None:
+    st.set_page_config(page_title="Flights Agent", layout="wide")
+    apply_theme()
+    render_header()
+
+    if "trip" not in st.session_state:
+        st.session_state.trip = None
+    if "raw_text" not in st.session_state:
+        st.session_state.raw_text = ""
+
+    left, right = st.columns([0.9, 1.35], gap="large")
+
+    with left:
+        st.subheader("Source")
+
+        input_mode = st.radio(
+            "Input mode",
+            options=["Paste text", "Upload file"],
             index=0,
             horizontal=True,
         )
 
-        sample_text = """
-Passenger : Reuven Anat Ms (ADT)
-LY Booking code : YYLXCH
-Ticket LY315  TLV  LHR 10 MAR 25 10:00
-"""
-
         uploaded_file = None
         raw_text_input = ""
 
-        if mode == "הדבקת טקסט":
+        if input_mode == "Paste text":
             raw_text_input = st.text_area(
-                "טקסט של כרטיס טיסה / אישור הזמנה",
-                value=sample_text,
-                height=260,
+                "Ticket text",
+                value=SAMPLE_TEXT,
+                height=280,
             )
         else:
             uploaded_file = st.file_uploader(
-                "העלה קובץ כרטיס (PDF / TXT / תמונה)",
+                "Ticket file",
                 type=["pdf", "txt", "jpg", "jpeg", "png"],
             )
 
-        parse_button = st.button("🔍 ניתוח הכרטיס")
+        parse_clicked = st.button("Analyze ticket", type="primary")
 
-    with col_output:
-        if parse_button:
-            extracted_text = None
+    with right:
+        st.subheader("Flight page")
 
-            # מצב העלאת קובץ – משתמשים ב-OCR החדש
-            if mode == "העלאת קובץ (PDF / תמונה / TXT)":
+        if parse_clicked:
+            if input_mode == "Upload file":
                 if uploaded_file is None:
-                    st.warning("נא להעלות קובץ קודם.")
+                    st.warning("Upload a ticket file first.")
+                    return
+                with st.spinner("Extracting ticket text..."):
+                    raw_text = extract_from_upload(uploaded_file)
+            else:
+                raw_text = raw_text_input.strip()
+                if not raw_text:
+                    st.warning("Paste ticket text first.")
                     return
 
-                suffix = ""
-                if "." in uploaded_file.name:
-                    suffix = "." + uploaded_file.name.split(".")[-1]
+            with st.spinner("Building the flight page..."):
+                st.session_state.raw_text = raw_text
+                st.session_state.trip = parse_trip(raw_text)
 
-                with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-                    tmp.write(uploaded_file.read())
-                    tmp_path = tmp.name
-
-                extracted_text = extract_text_any(tmp_path, lang="eng", ocr_only=True)
-
-            # מצב הדבקת טקסט – אין צורך ב-OCR
-            else:
-                if not raw_text_input.strip():
-                    st.warning("נא להדביק טקסט קודם.")
-                    return
-                extracted_text = raw_text_input
-
-            # הצגת הטקסט לאחר ניקוי
-            st.subheader("טקסט לאחר חילוץ / ניקוי")
-            st.text_area("Raw text", extracted_text, height=200)
-            st.write("DEBUG: GEMINI_API_KEY inside app:", bool(os.environ.get("GEMINI_API_KEY")))
-
-            # שלב 2: Parser מקורי
-            # 2 שלב: קריאה ל-LLM דרך query_flight_ticket.py
-            cmd = [
-                "python",
-                "query_flight_ticket.py",
-                "--text",
-                extracted_text,
-            ]
-
-            try:
-                output = subprocess.check_output(
-                    cmd,
-                    text=True,
-                    stderr=subprocess.STDOUT,  # אם יש הודעת שגיאה – נקבל אותה ב-output
-                )
-            except subprocess.CalledProcessError as e:
-                st.error("שגיאה בהרצת query_flight_ticket.py")
-                st.code(e.output)
-                return
-
-            # כאן output הוא JSON של Trip (מהקובץ query_flight_ticket.py)
-            trip = json.loads(output)
-
-            # שלב 3: העשרה עם נתוני שדות תעופה
-            trip_enriched = enrich_trip_with_airport_data(trip)
-
-
-            st.subheader("אובייקט Trip (JSON לאחר העשרה)")
-            st.json(trip_enriched)
-
-            # שלב 4: הפיכה לטבלה + כותרות בעברית
-            df = trip_to_dataframe(trip_enriched)
-            if df.empty:
-                st.warning("לא זוהו קטעי טיסה מהטקסט.")
-            else:
-                st.subheader("טבלת קטעי טיסה")
-                df_he = convert_headers(df)
-                st.dataframe(df_he, use_container_width=True)
+        if st.session_state.trip:
+            render_results(st.session_state.trip, st.session_state.raw_text)
+        else:
+            st.markdown(
+                """
+                <div class="panel">
+                    <div class="summary-label">Ready</div>
+                    <div class="summary-value">Add a ticket source to generate the flight page.</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
 
 if __name__ == "__main__":
