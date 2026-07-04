@@ -1,0 +1,10 @@
+streamlit
+pandas
+pypdf
+pymupdf
+pillow
+pytesseract
+python-docx
+python-bidi
+python-dateutil
+requests
