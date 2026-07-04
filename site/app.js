@@ -58,6 +58,7 @@ const emptyState = document.querySelector("#emptyState");
 const results = document.querySelector("#results");
 const resultNotice = document.querySelector("#resultNotice");
 const summaryGrid = document.querySelector("#summaryGrid");
+const importantPanel = document.querySelector("#importantPanel");
 const itineraryTab = document.querySelector("#itineraryTab");
 const requirementsTab = document.querySelector("#requirementsTab");
 const tableTab = document.querySelector("#tableTab");
@@ -427,16 +428,19 @@ function renderTrip(trip) {
   const passenger = trip.passengers[0]?.full_name || "-";
   const route = `${segment.departure_airport || "-"} to ${segment.arrival_airport || "-"}`;
   const flight = `${segment.airline_code || ""} ${segment.flight_number || ""}`.trim() || "-";
+  const firstDeparture = segment.departure_datetime_local || "-";
+  const firstPnr = segment.pnr || "-";
 
   summaryGrid.innerHTML = [
-    ["Passenger", passenger],
-    ["Route", route],
-    ["Segments", String(trip.segments.length)],
-    ["First flight", flight],
+    ["Route", route, "summary-tile route-tile"],
+    ["Passenger", passenger, "summary-tile"],
+    ["First flight", flight, "summary-tile"],
+    ["Departure", firstDeparture, "summary-tile attention-tile"],
+    ["PNR", firstPnr, "summary-tile"],
   ]
     .map(
-      ([label, value]) => `
-        <article class="summary-tile">
+      ([label, value, className]) => `
+        <article class="${className}">
           <div class="summary-label">${escapeHtml(label)}</div>
           <div class="summary-value">${escapeHtml(value)}</div>
         </article>
@@ -444,36 +448,86 @@ function renderTrip(trip) {
     )
     .join("");
 
+  importantPanel.innerHTML = renderImportantPanel(trip);
   itineraryTab.innerHTML = trip.segments.map(renderSegment).join("");
   requirementsTab.innerHTML = renderRequirements(trip);
   tableTab.innerHTML = renderTable(trip);
   jsonOutput.textContent = JSON.stringify(trip, null, 2);
 }
 
+function renderImportantPanel(trip) {
+  const firstSegment = trip.segments[0] || {};
+  const lastSegment = trip.segments[trip.segments.length - 1] || firstSegment;
+  const facts = [
+    ["Final destination", destinationLabel(lastSegment)],
+    ["Departure", firstSegment.departure_datetime_local || "-"],
+    ["Arrival", lastSegment.arrival_datetime_local || "-"],
+    ["Baggage", firstSegment.baggage_allowance || "-"],
+  ];
+
+  return `
+    <div class="priority-heading">
+      <span class="priority-kicker">Important</span>
+      <strong>${escapeHtml(firstSegment.pnr || "Review ticket details")}</strong>
+    </div>
+    <div class="priority-facts">
+      ${facts
+        .map(
+          ([label, value]) => `
+            <div>
+              <span>${escapeHtml(label)}</span>
+              <b>${escapeHtml(value)}</b>
+            </div>
+          `
+        )
+        .join("")}
+    </div>
+  `;
+}
+
 function renderSegment(segment, index) {
   const flight = `${segment.airline_code || ""} ${segment.flight_number || ""}`.trim() || "-";
+  const departureLabel = airportLabel(segment.departure_airport, segment.departure_city, segment.departure_country_name);
+  const arrivalLabel = airportLabel(segment.arrival_airport, segment.arrival_city, segment.arrival_country_name);
   return `
     <article class="segment-card">
-      <div class="segment-label">Segment ${index + 1}</div>
+      <div class="segment-topline">
+        <div>
+          <div class="segment-label">Segment ${index + 1}</div>
+          <strong>${escapeHtml(flight)}</strong>
+        </div>
+        <span>${escapeHtml(segment.duration || "Duration pending")}</span>
+      </div>
       <div class="segment-route">
         <div>
           <div class="airport-code">${escapeHtml(segment.departure_airport || "-")}</div>
-          <div class="airport-city">${escapeHtml(segment.departure_city || "-")}</div>
+          <div class="airport-city">${escapeHtml(departureLabel)}</div>
         </div>
         <div class="route-line" aria-hidden="true"></div>
         <div class="align-right">
           <div class="airport-code">${escapeHtml(segment.arrival_airport || "-")}</div>
-          <div class="airport-city">${escapeHtml(segment.arrival_city || "-")}</div>
+          <div class="airport-city">${escapeHtml(arrivalLabel)}</div>
         </div>
       </div>
       <div class="detail-grid">
-        ${renderDetail("Flight", flight)}
         ${renderDetail("Departure", segment.departure_datetime_local || "-")}
         ${renderDetail("Arrival", segment.arrival_datetime_local || "-")}
         ${renderDetail("PNR", segment.pnr || "-")}
+        ${renderDetail("Baggage", segment.baggage_allowance || "-")}
+        ${renderDetail("Class", segment.booking_class || "-")}
+        ${renderDetail("Ticket", segment.ticket_number || "-")}
       </div>
     </article>
   `;
+}
+
+function airportLabel(code, city, country) {
+  const parts = [city, country].filter(Boolean);
+  return parts.length ? parts.join(", ") : code || "-";
+}
+
+function destinationLabel(segment) {
+  return airportLabel(segment.arrival_airport, segment.arrival_city, segment.arrival_country_name);
 }
 
 function renderDetail(label, value) {

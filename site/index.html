@@ -11,16 +11,20 @@
       <header class="topbar">
         <div>
           <h1>Flights Agent</h1>
-          <p class="subtitle">Extract flight details from text, PDF tickets, and screenshots.</p>
+          <p class="subtitle">Ticket intelligence for route, passenger, timing, baggage, and document checks.</p>
         </div>
-        <span class="pill">Browser parser</span>
+        <div class="top-actions" aria-label="Runtime capabilities">
+          <span class="pill">PDF</span>
+          <span class="pill">Image OCR</span>
+          <span class="pill">TXT</span>
+        </div>
       </header>
 
       <section class="workspace" aria-label="Flight parser workspace">
         <section class="source-panel" aria-labelledby="source-title">
           <div class="section-heading">
             <h2 id="source-title">Source</h2>
-            <p>Paste text or upload a ticket file. PDFs and images are processed in this browser.</p>
+            <p>Paste text or upload a ticket file. The extracted text stays visible for review.</p>
           </div>
 
           <div class="mode-row" role="radiogroup" aria-label="Input mode">
@@ -81,13 +85,14 @@ Duration :
 
           <div id="emptyState" class="empty-state">
             <p>Ready</p>
-            <strong>Add a ticket source to generate the flight page.</strong>
+            <strong>Analyze a ticket to see the important flight details first.</strong>
           </div>
 
           <div id="results" class="hidden">
             <div id="resultNotice" class="notice">Running in the browser with the local parser.</div>
 
             <div class="summary-grid" id="summaryGrid"></div>
+            <div class="priority-strip" id="importantPanel"></div>
 
             <div class="tabs" role="tablist" aria-label="Flight result views">
               <button class="tab active" type="button" data-tab="itinerary">Itinerary</button>
