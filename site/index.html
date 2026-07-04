@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Flights Agent</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <h1>Flights Agent</h1>
+        </div>
+        <span class="pill">GitHub Pages demo</span>
+      </header>
+
+      <section class="workspace" aria-label="Flight parser workspace">
+        <section class="source-panel" aria-labelledby="source-title">
+          <div class="section-heading">
+            <h2 id="source-title">Source</h2>
+          </div>
+
+          <div class="mode-row" role="radiogroup" aria-label="Input mode">
+            <label>
+              <input type="radio" name="mode" value="text" checked>
+              Paste text
+            </label>
+            <label>
+              <input type="radio" name="mode" value="file">
+              TXT file
+            </label>
+          </div>
+
+          <textarea id="ticketText" spellcheck="false">Passenger : Reuven Anat Ms (ADT)
+LY Booking code : YYLXCH
+Ticket number : 1142491403549
+
+From        To        Flight        Departure        Arrival
+LARNACA LARNACA        TEL AVIV YAFO BEN GURION INTL
+Terminal: 3        LY5136        00:50
+01Jul2025        01:55
+01Jul2025
+Class :
+Economy (Y)
+Baggage :
+2PC
+Duration :
+01:05</textarea>
+
+          <input id="ticketFile" class="hidden" type="file" accept=".txt,text/plain">
+
+          <div class="actions">
+            <button id="analyzeBtn" class="primary" type="button">Analyze ticket</button>
+            <button id="clearBtn" class="secondary" type="button">Clear</button>
+          </div>
+        </section>
+
+        <section class="result-panel" aria-labelledby="result-title">
+          <div class="section-heading">
+            <h2 id="result-title">Flight page</h2>
+          </div>
+
+          <div id="emptyState" class="empty-state">
+            <p>Ready</p>
+            <strong>Add a ticket source to generate the flight page.</strong>
+          </div>
+
+          <div id="results" class="hidden">
+            <div class="notice">Running in the browser with the local parser.</div>
+
+            <div class="summary-grid" id="summaryGrid"></div>
+
+            <div class="tabs" role="tablist" aria-label="Flight result views">
+              <button class="tab active" type="button" data-tab="itinerary">Itinerary</button>
+              <button class="tab" type="button" data-tab="table">Table</button>
+              <button class="tab" type="button" data-tab="data">Data</button>
+            </div>
+
+            <section id="itineraryTab" class="tab-panel"></section>
+            <section id="tableTab" class="tab-panel hidden"></section>
+            <section id="dataTab" class="tab-panel hidden">
+              <button id="downloadBtn" class="secondary" type="button">Download JSON</button>
+              <pre id="jsonOutput"></pre>
+            </section>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
+
