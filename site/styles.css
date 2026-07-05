@@ -534,6 +534,178 @@ button:focus {
   margin-bottom: 14px;
 }
 
+.requirements-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.65fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.requirements-main,
+.requirements-side {
+  min-width: 0;
+}
+
+.requirement-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background:
+    linear-gradient(135deg, rgba(237, 243, 255, 0.92), rgba(255, 255, 255, 0.96)),
+    var(--surface);
+}
+
+.provider-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  border-radius: 999px;
+  border: 1px solid rgba(201, 133, 24, 0.26);
+  background: var(--gold-soft);
+  color: #765416;
+  padding: 0 10px;
+  font-size: 0.78rem;
+  font-weight: 820;
+  white-space: nowrap;
+}
+
+.provider-ready {
+  border-color: rgba(24, 128, 78, 0.26);
+  background: var(--green-soft);
+  color: #1d7046;
+}
+
+.requirement-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: start;
+  margin-bottom: 14px;
+}
+
+.requirement-card h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.requirement-card p {
+  margin-top: 6px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.requirements-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.field {
+  display: grid;
+  gap: 7px;
+}
+
+.field span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 740;
+  text-transform: uppercase;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--ink);
+  padding: 0 12px;
+  outline: none;
+}
+
+.field input:focus,
+.field select:focus {
+  border-color: rgba(40, 95, 214, 0.45);
+  box-shadow: 0 0 0 3px rgba(40, 95, 214, 0.12);
+}
+
+.requirement-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.requirements-preview {
+  display: grid;
+  gap: 12px;
+}
+
+.query-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.query-grid div,
+.provider-result-list div {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-strong);
+  padding: 11px;
+}
+
+.query-grid span,
+.provider-result-list span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.74rem;
+  text-transform: uppercase;
+}
+
+.query-grid b,
+.provider-result-list b {
+  display: block;
+  margin-top: 6px;
+  overflow-wrap: anywhere;
+}
+
+.query-json {
+  max-height: 260px;
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.result-status {
+  display: grid;
+  gap: 12px;
+}
+
+.result-waiting,
+.result-ready {
+  border-radius: 8px;
+  padding: 12px;
+  font-weight: 780;
+  line-height: 1.4;
+}
+
+.result-waiting {
+  background: var(--gold-soft);
+  color: #765416;
+}
+
+.result-ready {
+  background: var(--green-soft);
+  color: #1d7046;
+}
+
+.provider-result-list {
+  display: grid;
+  gap: 10px;
+}
+
 .requirement-card a {
   color: var(--teal);
   font-weight: 760;
@@ -663,8 +835,13 @@ pre {
 
   .summary-grid,
   .detail-grid,
-  .priority-facts {
+  .priority-facts,
+  .query-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .requirements-workspace {
+    grid-template-columns: 1fr;
   }
 
   .priority-strip {
@@ -705,8 +882,16 @@ pre {
   .summary-grid,
   .detail-grid,
   .segment-route,
-  .priority-facts {
+  .priority-facts,
+  .requirements-form,
+  .query-grid {
     grid-template-columns: 1fr;
+  }
+
+  .requirement-hero,
+  .requirement-card-head {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .route-line {

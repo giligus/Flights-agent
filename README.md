@@ -130,6 +130,8 @@ Railway injects `PORT` automatically. The Docker command uses that value for Str
 
 The app derives route legs from the parsed itinerary and shows passenger requirement checkers from TravelDoc/IATA plus official destination-government sources where known. Requirements are not finalized inside the app because visa and entry rules depend on citizenship, passport type, residence permits, transit details, travel date, and stay length.
 
+The GitHub Pages app includes a Requirements workspace with passenger-input fields, a provider-ready query packet, copyable JSON, and pending result cards for TravelDoc/IATA. These components prepare the exact payload needed by a future Railway backend, but they do not show final visa decisions without licensed provider credentials.
+
 For integrated TravelDoc/IATA results, use Railway or another backend host as a server-side proxy. Do not put provider API keys in the GitHub Pages static app.
 
 ## Notes For GitHub

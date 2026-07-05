@@ -43,6 +43,35 @@ const pdfJsUrl = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min
 const pdfWorkerUrl = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 const tesseractUrl = "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
 const scriptLoads = new Map();
+const countryOptions = [
+  ["", "Select country"],
+  ["IL", "Israel"],
+  ["CY", "Cyprus"],
+  ["IT", "Italy"],
+  ["GB", "United Kingdom"],
+  ["AE", "United Arab Emirates"],
+  ["TH", "Thailand"],
+  ["US", "United States"],
+  ["CA", "Canada"],
+  ["FR", "France"],
+  ["DE", "Germany"],
+  ["ES", "Spain"],
+  ["NL", "Netherlands"],
+];
+const passportTypeOptions = [
+  ["", "Select type"],
+  ["ordinary", "Ordinary / tourist"],
+  ["diplomatic", "Diplomatic"],
+  ["service", "Service / official"],
+  ["emergency", "Emergency travel document"],
+];
+const transitOptions = [
+  ["unknown", "Unknown / not sure"],
+  ["none", "No transit"],
+  ["airside", "Transit airside only"],
+  ["landside", "Transit and enter country"],
+];
+const requirementsState = {};
 
 const ticketText = document.querySelector("#ticketText");
 const ticketFile = document.querySelector("#ticketFile");
@@ -481,6 +510,7 @@ function renderTrip(trip) {
   importantPanel.innerHTML = renderImportantPanel(trip);
   itineraryTab.innerHTML = trip.segments.map(renderSegment).join("");
   requirementsTab.innerHTML = renderRequirements(trip);
+  bindRequirementComponents(trip);
   tableTab.innerHTML = renderTable(trip);
   jsonOutput.textContent = JSON.stringify(trip, null, 2);
 }
@@ -600,25 +630,276 @@ function renderRequirements(trip) {
   const route = sources.routeSegments
     .map((segment) => `${segment.departure_airport || "-"} to ${segment.arrival_airport || "-"}`)
     .join(" / ");
+  const travelDate = firstTravelDate(trip);
 
   return `
     <div class="notice">
       Travel requirements depend on citizenship, passport type, residence permits, transit,
-      stay length, and current rules. Use official checkers before travel.
+      stay length, and current rules. The query below is ready for a licensed Railway/API backend.
     </div>
-    <article class="requirement-card">
-      <div class="summary-label">Route basis</div>
-      <div class="summary-value">${escapeHtml(route || "-")} / ${escapeHtml(sources.destinationName)}</div>
-    </article>
-    <h3>Official checkers</h3>
-    ${sources.globalCheckers.map(renderRequirementSource).join("")}
-    <h3>Destination government sources</h3>
-    ${sources.destinationSources.map(renderRequirementSource).join("")}
-    <h3>Needed passenger inputs</h3>
-    <ul>
-      ${sources.requiredInputs.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
-    </ul>
+    <div class="requirements-workspace">
+      <section class="requirements-main" aria-label="Travel document query">
+        <article class="requirement-card requirement-hero">
+          <div>
+            <div class="summary-label">Route basis</div>
+            <div class="summary-value">${escapeHtml(route || "-")}</div>
+            <div class="requirement-note">${escapeHtml(sources.destinationName)} / travel date ${escapeHtml(travelDate || "-")}</div>
+          </div>
+          <span class="provider-badge">Provider pending</span>
+        </article>
+
+        <article class="requirement-card">
+          <div class="requirement-card-head">
+            <div>
+              <h3>Passenger inputs</h3>
+              <p>These fields are required before TravelDoc/IATA can return a reliable answer.</p>
+            </div>
+          </div>
+          <div class="requirements-form">
+            ${renderSelectField("Citizenship / nationality", "nationality", countryOptions)}
+            ${renderSelectField("Passport issuing country", "passportCountry", countryOptions)}
+            ${renderSelectField("Passport type", "passportType", passportTypeOptions)}
+            ${renderInputField("Passport expiry", "passportExpiry", "date")}
+            ${renderSelectField("Residence country", "residenceCountry", countryOptions)}
+            ${renderInputField("Stay length", "stayLengthDays", "number", "Days")}
+            ${renderSelectField("Transit", "transitMode", transitOptions)}
+            ${renderInputField("Travel date", "travelDate", "date", "", travelDate)}
+          </div>
+          <div class="requirement-actions">
+            <button class="primary" id="prepareRequirementsBtn" type="button">Prepare query</button>
+            <button class="secondary" id="copyRequirementsBtn" type="button">Copy query JSON</button>
+          </div>
+        </article>
+
+        <article class="requirement-card">
+          <div class="requirement-card-head">
+            <div>
+              <h3>Query packet</h3>
+              <p>Backend-ready payload for Railway, TravelDoc, or IATA Timatic AutoCheck.</p>
+            </div>
+            <span id="requirementsStatus" class="provider-badge">Draft</span>
+          </div>
+          <div id="requirementsPreview" class="requirements-preview"></div>
+        </article>
+      </section>
+
+      <aside class="requirements-side" aria-label="Travel requirement results">
+        <article class="requirement-card result-card">
+          <div class="summary-label">Result status</div>
+          <div id="requirementsResult" class="result-status"></div>
+        </article>
+
+        <article class="requirement-card">
+          <h3>Official checkers</h3>
+          ${sources.globalCheckers.map(renderRequirementSource).join("")}
+        </article>
+
+        <article class="requirement-card">
+          <h3>Destination sources</h3>
+          ${
+            sources.destinationSources.length
+              ? sources.destinationSources.map(renderRequirementSource).join("")
+              : `<div class="requirement-note">No destination government source mapped yet.</div>`
+          }
+        </article>
+      </aside>
+    </div>
   `;
+}
+
+function bindRequirementComponents(trip) {
+  const fields = requirementsTab.querySelectorAll("[data-req-field]");
+  fields.forEach((field) => {
+    if (requirementsState[field.dataset.reqField] == null && field.value) {
+      requirementsState[field.dataset.reqField] = field.value;
+    }
+    field.addEventListener("input", () => {
+      requirementsState[field.dataset.reqField] = field.value;
+      updateRequirementsPreview(trip);
+    });
+    field.addEventListener("change", () => {
+      requirementsState[field.dataset.reqField] = field.value;
+      updateRequirementsPreview(trip);
+    });
+  });
+
+  const prepareButton = requirementsTab.querySelector("#prepareRequirementsBtn");
+  const copyButton = requirementsTab.querySelector("#copyRequirementsBtn");
+  if (prepareButton) prepareButton.addEventListener("click", () => updateRequirementsPreview(trip, true));
+  if (copyButton) {
+    copyButton.addEventListener("click", async () => {
+      const payload = buildRequirementsQuery(trip);
+      await copyText(JSON.stringify(payload, null, 2));
+      copyButton.textContent = "Copied";
+      window.setTimeout(() => {
+        copyButton.textContent = "Copy query JSON";
+      }, 1400);
+    });
+  }
+  updateRequirementsPreview(trip);
+}
+
+function updateRequirementsPreview(trip, markPrepared = false) {
+  const payload = buildRequirementsQuery(trip);
+  const status = requirementsTab.querySelector("#requirementsStatus");
+  const preview = requirementsTab.querySelector("#requirementsPreview");
+  const result = requirementsTab.querySelector("#requirementsResult");
+  if (!status || !preview || !result) return;
+
+  const missing = payload.missing_inputs;
+  status.textContent = missing.length ? `${missing.length} missing` : "Ready";
+  status.classList.toggle("provider-ready", missing.length === 0);
+
+  preview.innerHTML = `
+    <div class="query-grid">
+      ${renderQueryFact("Origin", payload.route.origin_airport || "-")}
+      ${renderQueryFact("Destination", payload.route.destination_airport || "-")}
+      ${renderQueryFact("Travel date", payload.travel.travel_date || "-")}
+      ${renderQueryFact("Nationality", labelForCountry(payload.passenger.nationality) || "-")}
+      ${renderQueryFact("Passport", labelForCountry(payload.passenger.passport_issuing_country) || "-")}
+      ${renderQueryFact("Stay", payload.travel.stay_length_days ? `${payload.travel.stay_length_days} days` : "-")}
+    </div>
+    <pre class="query-json">${escapeHtml(JSON.stringify(payload, null, 2))}</pre>
+  `;
+
+  const resultText = missing.length
+    ? `Missing: ${missing.join(", ")}`
+    : "Ready to send to a licensed provider backend.";
+  result.innerHTML = `
+    <div class="${missing.length ? "result-waiting" : "result-ready"}">${escapeHtml(resultText)}</div>
+    <div class="requirement-note">
+      ${
+        markPrepared && !missing.length
+          ? "Next step: connect Railway to TravelDoc/IATA and replace this pending card with live provider results."
+          : "Provider API is not connected in the static GitHub Pages app, so no visa decision is shown here."
+      }
+    </div>
+    <div class="provider-result-list">
+      <div><b>TravelDoc</b><span>Awaiting licensed API/proxy</span></div>
+      <div><b>IATA Timatic</b><span>Awaiting API credentials</span></div>
+      <div><b>Government sources</b><span>Open official links below</span></div>
+    </div>
+  `;
+}
+
+function buildRequirementsQuery(trip) {
+  const firstSegment = trip.segments[0] || {};
+  const lastSegment = trip.segments[trip.segments.length - 1] || firstSegment;
+  const travelDate = fieldValue("travelDate") || firstTravelDate(trip);
+  const stayLength = fieldValue("stayLengthDays");
+  const payload = {
+    provider_target: "traveldoc_or_iata_timatic_backend",
+    generated_at: new Date().toISOString(),
+    passenger: {
+      full_name: trip.passengers[0]?.full_name || "",
+      nationality: fieldValue("nationality"),
+      passport_issuing_country: fieldValue("passportCountry"),
+      passport_type: fieldValue("passportType"),
+      passport_expiry: fieldValue("passportExpiry"),
+      residence_country: fieldValue("residenceCountry"),
+    },
+    route: {
+      origin_airport: firstSegment.departure_airport || "",
+      destination_airport: lastSegment.arrival_airport || "",
+      origin_country: firstSegment.departure_country_name || "",
+      destination_country: lastSegment.arrival_country_name || "",
+      segments: trip.segments.map((segment) => ({
+        from: segment.departure_airport || "",
+        to: segment.arrival_airport || "",
+        departure: segment.departure_datetime_local || "",
+        arrival: segment.arrival_datetime_local || "",
+      })),
+    },
+    travel: {
+      travel_date: travelDate,
+      stay_length_days: stayLength,
+      transit_mode: fieldValue("transitMode") || "unknown",
+    },
+    missing_inputs: [],
+  };
+
+  payload.missing_inputs = missingRequirementInputs(payload);
+  return payload;
+}
+
+function missingRequirementInputs(payload) {
+  const checks = [
+    ["Citizenship / nationality", payload.passenger.nationality],
+    ["Passport issuing country", payload.passenger.passport_issuing_country],
+    ["Passport type", payload.passenger.passport_type],
+    ["Passport expiry", payload.passenger.passport_expiry],
+    ["Travel date", payload.travel.travel_date],
+    ["Stay length", payload.travel.stay_length_days],
+  ];
+  return checks.filter(([, value]) => !value).map(([label]) => label);
+}
+
+function renderSelectField(label, key, options) {
+  const selectedValue = requirementsState[key] || "";
+  return `
+    <label class="field">
+      <span>${escapeHtml(label)}</span>
+      <select data-req-field="${escapeHtml(key)}">
+        ${options
+          .map(
+            ([value, optionLabel]) =>
+              `<option value="${escapeHtml(value)}"${value === selectedValue ? " selected" : ""}>${escapeHtml(optionLabel)}</option>`
+          )
+          .join("")}
+      </select>
+    </label>
+  `;
+}
+
+function renderInputField(label, key, type, suffix = "", fallbackValue = "") {
+  const value = requirementsState[key] || fallbackValue || "";
+  return `
+    <label class="field">
+      <span>${escapeHtml(label)}</span>
+      <input data-req-field="${escapeHtml(key)}" type="${escapeHtml(type)}" value="${escapeHtml(value)}" ${
+        suffix ? `placeholder="${escapeHtml(suffix)}"` : ""
+      }>
+    </label>
+  `;
+}
+
+function renderQueryFact(label, value) {
+  return `
+    <div>
+      <span>${escapeHtml(label)}</span>
+      <b>${escapeHtml(value)}</b>
+    </div>
+  `;
+}
+
+function fieldValue(key) {
+  const field = requirementsTab.querySelector(`[data-req-field="${key}"]`);
+  return field ? field.value.trim() : requirementsState[key] || "";
+}
+
+function firstTravelDate(trip) {
+  const firstSegment = trip.segments[0] || {};
+  return (firstSegment.departure_datetime_local || "").split(" ")[0] || "";
+}
+
+function labelForCountry(code) {
+  return (countryOptions.find(([value]) => value === code) || [null, ""])[1];
+}
+
+async function copyText(text) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+  const copyArea = document.createElement("textarea");
+  copyArea.value = text;
+  copyArea.setAttribute("readonly", "");
+  copyArea.style.position = "fixed";
+  copyArea.style.left = "-9999px";
+  document.body.appendChild(copyArea);
+  copyArea.select();
+  document.execCommand("copy");
+  document.body.removeChild(copyArea);
 }
 
 function renderRequirementSource(source) {
