@@ -135,6 +135,7 @@ const countryOptions = [
   ["CA", "Canada"],
   ["FR", "France"],
   ["DE", "Germany"],
+  ["GR", "Greece"],
   ["ES", "Spain"],
   ["NL", "Netherlands"],
 ];
@@ -151,6 +152,175 @@ const transitOptions = [
   ["airside", "Transit airside only"],
   ["landside", "Transit and enter country"],
 ];
+const officialVisaSources = {
+  IL: [
+    {
+      label: "Israel Population & Immigration Authority",
+      url: "https://israel-entry.piba.gov.il/",
+      note: "Official ETA-IL, eVisa-B2, and entry procedure portal.",
+    },
+  ],
+  CY: [
+    {
+      label: "Gov.cy visas",
+      url: "https://www.gov.cy/en/information/visas/",
+      note: "Official Republic of Cyprus visa information.",
+    },
+  ],
+  IT: [
+    {
+      label: "Visa for Italy",
+      url: "https://vistoperitalia.esteri.it/",
+      note: "Official Italian Ministry of Foreign Affairs visa checker.",
+    },
+  ],
+  GB: [
+    {
+      label: "GOV.UK visa checker",
+      url: "https://www.gov.uk/check-uk-visa",
+      note: "Official UK visa and ETA checker.",
+    },
+  ],
+  AE: [
+    {
+      label: "UAE visit visas",
+      url: "https://u.ae/en/information-and-services/visa-and-emirates-id/visit-visas",
+      note: "Official UAE government visit visa guidance.",
+    },
+  ],
+  TH: [
+    {
+      label: "Thailand e-Visa",
+      url: "https://www.thaievisa.go.th/",
+      note: "Official Thai e-Visa portal.",
+    },
+  ],
+  US: [
+    {
+      label: "U.S. visitor visa",
+      url: "https://travel.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html",
+      note: "Official U.S. Department of State visitor visa guidance.",
+    },
+  ],
+  FR: [
+    {
+      label: "France-Visas",
+      url: "https://france-visas.gouv.fr/en/",
+      note: "Official French visa portal.",
+    },
+  ],
+};
+const destinationDirectory = [
+  { key: "TLV", label: "Tel Aviv, Israel", type: "City", airport: "TLV" },
+  { key: "LCA", label: "Larnaca, Cyprus", type: "City", airport: "LCA" },
+  { key: "LHR", label: "London, United Kingdom", type: "City", airport: "LHR" },
+  { key: "JFK", label: "New York, United States", type: "City", airport: "JFK" },
+  { key: "CDG", label: "Paris, France", type: "City", airport: "CDG" },
+  { key: "FCO", label: "Rome, Italy", type: "City", airport: "FCO" },
+  { key: "MXP", label: "Milan, Italy", type: "City", airport: "MXP" },
+  { key: "VCE", label: "Venice, Italy", type: "City", airport: "VCE" },
+  { key: "ATH", label: "Athens, Greece", type: "City", airport: "ATH" },
+  { key: "DXB", label: "Dubai, United Arab Emirates", type: "City", airport: "DXB" },
+  {
+    key: "IL",
+    label: "Israel",
+    type: "Country",
+    city: "Jerusalem",
+    country: "Israel",
+    countryCode: "IL",
+    timezone: "Asia/Jerusalem",
+    currency: "ILS",
+    lat: 31.7683,
+    lon: 35.2137,
+  },
+  {
+    key: "CY",
+    label: "Cyprus",
+    type: "Country",
+    city: "Nicosia",
+    country: "Cyprus",
+    countryCode: "CY",
+    timezone: "Asia/Nicosia",
+    currency: "EUR",
+    lat: 35.1856,
+    lon: 33.3823,
+  },
+  {
+    key: "IT",
+    label: "Italy",
+    type: "Country",
+    city: "Rome",
+    country: "Italy",
+    countryCode: "IT",
+    timezone: "Europe/Rome",
+    currency: "EUR",
+    lat: 41.9028,
+    lon: 12.4964,
+  },
+  {
+    key: "GB",
+    label: "United Kingdom",
+    type: "Country",
+    city: "London",
+    country: "United Kingdom",
+    countryCode: "GB",
+    timezone: "Europe/London",
+    currency: "GBP",
+    lat: 51.5072,
+    lon: -0.1276,
+  },
+  {
+    key: "AE",
+    label: "United Arab Emirates",
+    type: "Country",
+    city: "Abu Dhabi",
+    country: "United Arab Emirates",
+    countryCode: "AE",
+    timezone: "Asia/Dubai",
+    currency: "AED",
+    lat: 24.4539,
+    lon: 54.3773,
+  },
+  {
+    key: "FR",
+    label: "France",
+    type: "Country",
+    city: "Paris",
+    country: "France",
+    countryCode: "FR",
+    timezone: "Europe/Paris",
+    currency: "EUR",
+    lat: 48.8566,
+    lon: 2.3522,
+  },
+  {
+    key: "US",
+    label: "United States",
+    type: "Country",
+    city: "Washington, DC",
+    country: "United States",
+    countryCode: "US",
+    timezone: "America/New_York",
+    currency: "USD",
+    lat: 38.9072,
+    lon: -77.0369,
+  },
+  {
+    key: "TH",
+    label: "Thailand",
+    type: "Country",
+    city: "Bangkok",
+    country: "Thailand",
+    countryCode: "TH",
+    timezone: "Asia/Bangkok",
+    currency: "THB",
+    lat: 13.7563,
+    lon: 100.5018,
+  },
+];
+const standaloneRequirementsState = {};
+const visaSelectionState = new Set(["IL"]);
+let standaloneDestinationKey = "TLV";
 const requirementsState = {};
 
 const ticketText = document.querySelector("#ticketText");
@@ -175,9 +345,18 @@ const tableTab = document.querySelector("#tableTab");
 const dataTab = document.querySelector("#dataTab");
 const jsonOutput = document.querySelector("#jsonOutput");
 const downloadBtn = document.querySelector("#downloadBtn");
+const standaloneToolPanel = document.querySelector("#standaloneToolPanel");
 
 let currentTrip = null;
 let currentSourceType = "pasted_text";
+
+document.querySelectorAll(".service-tile").forEach((button) => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll(".service-tile").forEach((tile) => tile.classList.remove("active"));
+    button.classList.add("active");
+    renderStandaloneTool(button.dataset.service);
+  });
+});
 
 document.querySelectorAll("input[name='mode']").forEach((input) => {
   input.addEventListener("change", () => {
@@ -254,6 +433,309 @@ document.querySelectorAll(".tab").forEach((button) => {
     dataTab.classList.toggle("hidden", active !== "data");
   });
 });
+
+renderStandaloneTool("requirements");
+
+function renderStandaloneTool(service) {
+  if (!standaloneToolPanel) return;
+
+  if (service === "visa") {
+    standaloneToolPanel.innerHTML = renderVisaTool();
+    bindVisaTool();
+    return;
+  }
+
+  if (service === "destination") {
+    standaloneToolPanel.innerHTML = renderDestinationInfoTool();
+    bindDestinationInfoTool();
+    return;
+  }
+
+  standaloneToolPanel.innerHTML = renderStandaloneRequirements();
+  bindStandaloneRequirements();
+}
+
+function renderStandaloneRequirements() {
+  return `
+    <div class="tool-layout">
+      <section class="tool-card">
+        <div class="tool-card-head">
+          <div>
+            <div class="summary-label">Check requirements</div>
+            <h2>Travel document query</h2>
+            <p>Build the inputs needed for visa, passport, transit, and health checks before uploading a ticket.</p>
+          </div>
+          <span class="provider-badge">Independent</span>
+        </div>
+        <div class="requirements-form">
+          ${renderStandaloneSelectField("Origin country", "originCountry", countryOptions)}
+          ${renderStandaloneSelectField("Destination country", "destinationCountry", countryOptions)}
+          ${renderStandaloneSelectField("Citizenship / nationality", "nationality", countryOptions)}
+          ${renderStandaloneSelectField("Passport issuing country", "passportCountry", countryOptions)}
+          ${renderStandaloneSelectField("Passport type", "passportType", passportTypeOptions)}
+          ${renderStandaloneInputField("Passport expiry", "passportExpiry", "date")}
+          ${renderStandaloneInputField("Travel date", "travelDate", "date")}
+          ${renderStandaloneInputField("Stay length", "stayLengthDays", "number", "Days")}
+          ${renderStandaloneSelectField("Transit", "transitMode", transitOptions)}
+        </div>
+        <div class="requirement-actions">
+          <button class="primary" id="standalonePrepareRequirementsBtn" type="button">Prepare query</button>
+          <button class="secondary" id="standaloneCopyRequirementsBtn" type="button">Copy query JSON</button>
+        </div>
+      </section>
+      <aside class="tool-card">
+        <div class="tool-card-head">
+          <div>
+            <h2>Result packet</h2>
+            <p>Use this payload for TravelDoc/IATA or a backend provider.</p>
+          </div>
+          <span id="standaloneRequirementsStatus" class="provider-badge">Draft</span>
+        </div>
+        <div id="standaloneRequirementsPreview" class="requirements-preview"></div>
+        <div class="official-source-list">
+          <h3>Official sources</h3>
+          <div id="standaloneRequirementSources"></div>
+        </div>
+      </aside>
+    </div>
+  `;
+}
+
+function bindStandaloneRequirements() {
+  standaloneToolPanel.querySelectorAll("[data-standalone-req-field]").forEach((field) => {
+    if (standaloneRequirementsState[field.dataset.standaloneReqField] == null && field.value) {
+      standaloneRequirementsState[field.dataset.standaloneReqField] = field.value;
+    }
+    field.addEventListener("input", () => {
+      standaloneRequirementsState[field.dataset.standaloneReqField] = field.value;
+      updateStandaloneRequirementsPreview();
+    });
+    field.addEventListener("change", () => {
+      standaloneRequirementsState[field.dataset.standaloneReqField] = field.value;
+      updateStandaloneRequirementsPreview();
+    });
+  });
+
+  standaloneToolPanel.querySelector("#standalonePrepareRequirementsBtn")?.addEventListener("click", () => {
+    updateStandaloneRequirementsPreview(true);
+  });
+  standaloneToolPanel.querySelector("#standaloneCopyRequirementsBtn")?.addEventListener("click", async (event) => {
+    await copyText(JSON.stringify(buildStandaloneRequirementsQuery(), null, 2));
+    event.currentTarget.textContent = "Copied";
+    window.setTimeout(() => {
+      event.currentTarget.textContent = "Copy query JSON";
+    }, 1400);
+  });
+
+  updateStandaloneRequirementsPreview();
+}
+
+function updateStandaloneRequirementsPreview(markPrepared = false) {
+  const payload = buildStandaloneRequirementsQuery();
+  const status = standaloneToolPanel.querySelector("#standaloneRequirementsStatus");
+  const preview = standaloneToolPanel.querySelector("#standaloneRequirementsPreview");
+  const sources = standaloneToolPanel.querySelector("#standaloneRequirementSources");
+  if (!status || !preview || !sources) return;
+
+  status.textContent = payload.missing_inputs.length ? `${payload.missing_inputs.length} missing` : "Ready";
+  status.classList.toggle("provider-ready", payload.missing_inputs.length === 0);
+  preview.innerHTML = `
+    <div class="query-grid">
+      ${renderQueryFact("Origin", labelForCountry(payload.route.origin_country) || "-")}
+      ${renderQueryFact("Destination", labelForCountry(payload.route.destination_country) || "-")}
+      ${renderQueryFact("Nationality", labelForCountry(payload.passenger.nationality) || "-")}
+      ${renderQueryFact("Passport", labelForCountry(payload.passenger.passport_issuing_country) || "-")}
+      ${renderQueryFact("Travel date", payload.travel.travel_date || "-")}
+      ${renderQueryFact("Stay", payload.travel.stay_length_days ? `${payload.travel.stay_length_days} days` : "-")}
+    </div>
+    <div class="${payload.missing_inputs.length ? "result-waiting" : "result-ready"}">
+      ${escapeHtml(
+        payload.missing_inputs.length
+          ? `Missing: ${payload.missing_inputs.join(", ")}`
+          : markPrepared
+            ? "Ready to send to a licensed provider backend."
+            : "Ready."
+      )}
+    </div>
+    <pre class="query-json">${escapeHtml(JSON.stringify(payload, null, 2))}</pre>
+  `;
+
+  const officialSources = [
+    ...buildRequirementSourcesForCountry(payload.route.destination_country),
+    ...buildRequirementSourcesForCountry(payload.route.origin_country),
+  ];
+  const uniqueSources = uniqueSourcesByUrl(officialSources);
+  sources.innerHTML = uniqueSources.length
+    ? uniqueSources.map(renderRequirementSource).join("")
+    : `<div class="requirement-note">Choose a destination to show official government sources.</div>`;
+}
+
+function buildStandaloneRequirementsQuery() {
+  const payload = {
+    provider_target: "traveldoc_or_iata_timatic_backend",
+    generated_at: new Date().toISOString(),
+    passenger: {
+      nationality: standaloneFieldValue("nationality"),
+      passport_issuing_country: standaloneFieldValue("passportCountry"),
+      passport_type: standaloneFieldValue("passportType"),
+      passport_expiry: standaloneFieldValue("passportExpiry"),
+    },
+    route: {
+      origin_country: standaloneFieldValue("originCountry"),
+      destination_country: standaloneFieldValue("destinationCountry"),
+    },
+    travel: {
+      travel_date: standaloneFieldValue("travelDate"),
+      stay_length_days: standaloneFieldValue("stayLengthDays"),
+      transit_mode: standaloneFieldValue("transitMode") || "unknown",
+    },
+    missing_inputs: [],
+  };
+  payload.missing_inputs = missingRequirementInputs(payload);
+  if (!payload.route.origin_country) payload.missing_inputs.push("Origin country");
+  if (!payload.route.destination_country) payload.missing_inputs.push("Destination country");
+  return payload;
+}
+
+function renderVisaTool() {
+  const options = Object.entries(officialVisaSources)
+    .map(([countryCode, sources]) => {
+      const checked = visaSelectionState.has(countryCode) ? " checked" : "";
+      return `
+        <label class="destination-check">
+          <input type="checkbox" data-visa-country="${escapeHtml(countryCode)}"${checked}>
+          <span>
+            <b>${escapeHtml(labelForCountry(countryCode) || countryCode)}</b>
+            <small>${escapeHtml(sources[0]?.label || "Official visa site")}</small>
+          </span>
+        </label>
+      `;
+    })
+    .join("");
+
+  return `
+    <div class="tool-layout">
+      <section class="tool-card">
+        <div class="tool-card-head">
+          <div>
+            <div class="summary-label">Issue visa</div>
+            <h2>Official visa sites</h2>
+            <p>Select 1 to 5 destinations. The result shows government or official authority links only.</p>
+          </div>
+          <span id="visaSelectionCount" class="provider-badge">1 selected</span>
+        </div>
+        <div class="destination-check-grid">${options}</div>
+        <div id="visaLimitNotice" class="requirement-note">Select between 1 and 5 destinations.</div>
+      </section>
+      <aside class="tool-card">
+        <div class="tool-card-head">
+          <div>
+            <h2>Official links</h2>
+            <p>Open the destination authority site. Visa eligibility still depends on traveler details.</p>
+          </div>
+        </div>
+        <div id="visaSourceResults" class="official-source-list"></div>
+      </aside>
+    </div>
+  `;
+}
+
+function bindVisaTool() {
+  standaloneToolPanel.querySelectorAll("[data-visa-country]").forEach((checkbox) => {
+    checkbox.addEventListener("change", () => {
+      const countryCode = checkbox.dataset.visaCountry;
+      if (checkbox.checked && visaSelectionState.size >= 5) {
+        checkbox.checked = false;
+        showVisaLimitNotice("Maximum 5 destinations. Clear one destination before adding another.");
+        return;
+      }
+      if (checkbox.checked) {
+        visaSelectionState.add(countryCode);
+      } else if (visaSelectionState.size > 1) {
+        visaSelectionState.delete(countryCode);
+      } else {
+        checkbox.checked = true;
+        showVisaLimitNotice("Keep at least 1 destination selected.");
+      }
+      renderVisaResults();
+    });
+  });
+  renderVisaResults();
+}
+
+function renderVisaResults() {
+  const count = standaloneToolPanel.querySelector("#visaSelectionCount");
+  const resultsPanel = standaloneToolPanel.querySelector("#visaSourceResults");
+  if (!count || !resultsPanel) return;
+  count.textContent = `${visaSelectionState.size} selected`;
+  const sources = [...visaSelectionState].flatMap((countryCode) =>
+    (officialVisaSources[countryCode] || []).map((source) => ({
+      ...source,
+      countryCode,
+      countryName: labelForCountry(countryCode) || countryCode,
+    }))
+  );
+  resultsPanel.innerHTML = sources
+    .map(
+      (source) => `
+        <article class="requirement-card visa-source-card">
+          <div class="summary-label">${escapeHtml(source.countryName)}</div>
+          <a href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(source.label)}</a>
+          <div class="requirement-note">${escapeHtml(source.note)}</div>
+        </article>
+      `
+    )
+    .join("");
+}
+
+function showVisaLimitNotice(message) {
+  const notice = standaloneToolPanel.querySelector("#visaLimitNotice");
+  if (notice) notice.textContent = message;
+}
+
+function renderDestinationInfoTool() {
+  const options = destinationDirectory
+    .map(
+      (destination) =>
+        `<option value="${escapeHtml(destination.key)}"${destination.key === standaloneDestinationKey ? " selected" : ""}>${escapeHtml(
+          `${destination.label} (${destination.type})`
+        )}</option>`
+    )
+    .join("");
+  return `
+    <section class="tool-card destination-tool-card">
+      <div class="tool-card-head">
+        <div>
+          <div class="summary-label">Destination info</div>
+          <h2>Choose a city or country</h2>
+          <p>Live weather and currency, plus official warning and event channels.</p>
+        </div>
+        <label class="field destination-picker">
+          <span>Destination</span>
+          <select id="standaloneDestinationSelect">${options}</select>
+        </label>
+      </div>
+      <div id="standaloneDestinationResult"></div>
+    </section>
+  `;
+}
+
+function bindDestinationInfoTool() {
+  const select = standaloneToolPanel.querySelector("#standaloneDestinationSelect");
+  select?.addEventListener("change", () => {
+    standaloneDestinationKey = select.value;
+    renderStandaloneDestinationResult();
+  });
+  renderStandaloneDestinationResult();
+}
+
+function renderStandaloneDestinationResult() {
+  const result = standaloneToolPanel.querySelector("#standaloneDestinationResult");
+  if (!result) return;
+  const profile = buildDestinationProfileFromKey(standaloneDestinationKey);
+  result.innerHTML = renderDestinationProfile(profile, "standalone");
+  loadDestinationPanels(profile, "standalone");
+}
 
 function parseTicket(rawText) {
   const pnr = matchFirst(rawText, [
@@ -675,7 +1157,12 @@ function destinationLabel(segment) {
 }
 
 function renderDestinationBriefing(trip) {
-  const profile = buildDestinationProfile(trip);
+  return renderDestinationProfile(buildDestinationProfile(trip));
+}
+
+function renderDestinationProfile(profile, panelPrefix = "") {
+  const weatherPanelId = panelPrefix ? `${panelPrefix}WeatherPanel` : "weatherPanel";
+  const currencyPanelId = panelPrefix ? `${panelPrefix}CurrencyPanel` : "currencyPanel";
   return `
     <div class="destination-briefing">
       <article class="destination-hero">
@@ -701,7 +1188,7 @@ function renderDestinationBriefing(trip) {
             </div>
             <span class="provider-badge">Open-Meteo</span>
           </div>
-          <div id="weatherPanel" class="live-panel">${renderLoading("Loading weather...")}</div>
+          <div id="${escapeHtml(weatherPanelId)}" class="live-panel">${renderLoading("Loading weather...")}</div>
         </article>
 
         <article class="destination-card">
@@ -712,7 +1199,7 @@ function renderDestinationBriefing(trip) {
             </div>
             <span class="provider-badge">${escapeHtml(profile.currency || "Currency")}</span>
           </div>
-          <div id="currencyPanel" class="live-panel">${renderLoading("Loading currency...")}</div>
+          <div id="${escapeHtml(currencyPanelId)}" class="live-panel">${renderLoading("Loading currency...")}</div>
         </article>
 
         <article class="destination-card warning-card">
@@ -746,12 +1233,18 @@ function renderDestinationBriefing(trip) {
 }
 
 async function loadDestinationBriefing(trip) {
-  const profile = buildDestinationProfile(trip);
-  await Promise.allSettled([loadWeatherPanel(profile), loadCurrencyPanel(profile)]);
+  await loadDestinationPanels(buildDestinationProfile(trip));
 }
 
-async function loadWeatherPanel(profile) {
-  const panel = document.querySelector("#weatherPanel");
+async function loadDestinationPanels(profile, panelPrefix = "") {
+  await Promise.allSettled([
+    loadWeatherPanel(profile, panelPrefix ? `${panelPrefix}WeatherPanel` : "weatherPanel"),
+    loadCurrencyPanel(profile, panelPrefix ? `${panelPrefix}CurrencyPanel` : "currencyPanel"),
+  ]);
+}
+
+async function loadWeatherPanel(profile, panelId = "weatherPanel") {
+  const panel = document.querySelector(`#${panelId}`);
   if (!panel) return;
   if (profile.lat == null || profile.lon == null) {
     panel.innerHTML = renderPanelError("No coordinates mapped for this airport yet.");
@@ -776,8 +1269,8 @@ async function loadWeatherPanel(profile) {
   }
 }
 
-async function loadCurrencyPanel(profile) {
-  const panel = document.querySelector("#currencyPanel");
+async function loadCurrencyPanel(profile, panelId = "currencyPanel") {
+  const panel = document.querySelector(`#${panelId}`);
   if (!panel) return;
   if (!profile.currency || profile.currency === "USD") {
     panel.innerHTML = renderCurrencyData({ base: "USD", target: profile.currency || "USD", rate: 1 });
@@ -863,6 +1356,40 @@ function buildDestinationProfile(trip) {
     travelDate: (firstSegment.departure_datetime_local || "").split(" ")[0] || "",
     warningLinks: buildWarningLinks(countryCode, country),
     eventLinks: buildEventLinks(countryCode, airport.city || finalSegment.arrival_city, country),
+  };
+}
+
+function buildDestinationProfileFromKey(key) {
+  const entry = destinationDirectory.find((destination) => destination.key === key) || destinationDirectory[0];
+  if (entry.airport) {
+    const airport = airports[entry.airport] || {};
+    return {
+      airport: entry.airport,
+      city: airport.city || entry.label,
+      country: airport.country || "",
+      countryCode: airport.countryCode || countryCodeForAirport(entry.airport),
+      timezone: airport.timezone || "",
+      currency: airport.currency || currencyForCountry(airport.countryCode),
+      lat: airport.lat,
+      lon: airport.lon,
+      travelDate: "Live",
+      warningLinks: buildWarningLinks(airport.countryCode || countryCodeForAirport(entry.airport), airport.country || ""),
+      eventLinks: buildEventLinks(airport.countryCode || countryCodeForAirport(entry.airport), airport.city, airport.country),
+    };
+  }
+
+  return {
+    airport: entry.type,
+    city: entry.city || "",
+    country: entry.country || entry.label,
+    countryCode: entry.countryCode,
+    timezone: entry.timezone || "",
+    currency: entry.currency || currencyForCountry(entry.countryCode),
+    lat: entry.lat,
+    lon: entry.lon,
+    travelDate: "Live",
+    warningLinks: buildWarningLinks(entry.countryCode, entry.country || entry.label),
+    eventLinks: buildEventLinks(entry.countryCode, entry.city, entry.country || entry.label),
   };
 }
 
@@ -1374,6 +1901,40 @@ function renderInputField(label, key, type, suffix = "", fallbackValue = "") {
   `;
 }
 
+function renderStandaloneSelectField(label, key, options) {
+  const selectedValue = standaloneRequirementsState[key] || "";
+  return `
+    <label class="field">
+      <span>${escapeHtml(label)}</span>
+      <select data-standalone-req-field="${escapeHtml(key)}">
+        ${options
+          .map(
+            ([value, optionLabel]) =>
+              `<option value="${escapeHtml(value)}"${value === selectedValue ? " selected" : ""}>${escapeHtml(optionLabel)}</option>`
+          )
+          .join("")}
+      </select>
+    </label>
+  `;
+}
+
+function renderStandaloneInputField(label, key, type, suffix = "") {
+  const value = standaloneRequirementsState[key] || "";
+  return `
+    <label class="field">
+      <span>${escapeHtml(label)}</span>
+      <input data-standalone-req-field="${escapeHtml(key)}" type="${escapeHtml(type)}" value="${escapeHtml(value)}" ${
+        suffix ? `placeholder="${escapeHtml(suffix)}"` : ""
+      }>
+    </label>
+  `;
+}
+
+function standaloneFieldValue(key) {
+  const field = standaloneToolPanel.querySelector(`[data-standalone-req-field="${key}"]`);
+  return field ? field.value.trim() : standaloneRequirementsState[key] || "";
+}
+
 function renderQueryFact(label, value) {
   return `
     <div>
@@ -1416,7 +1977,7 @@ async function copyText(text) {
 function renderRequirementSource(source) {
   return `
     <article class="requirement-card">
-      <a href="${source.url}" target="_blank" rel="noopener noreferrer">${escapeHtml(source.label)}</a>
+      <a href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(source.label)}</a>
       <div class="requirement-note">${escapeHtml(source.note)}</div>
     </article>
   `;
@@ -1436,15 +1997,6 @@ function buildRequirementSources(trip) {
     },
   ];
 
-  const byCountry = {
-    CY: [{ label: "Gov.cy visa information", url: "https://www.gov.cy/en/information/visas/", note: "Official Cyprus government visa information." }],
-    IT: [{ label: "Visa for Italy", url: "https://vistoperitalia.esteri.it/", note: "Official Italian Ministry of Foreign Affairs visa checker." }],
-    GB: [{ label: "GOV.UK visa checker", url: "https://www.gov.uk/check-uk-visa", note: "Official UK visa and ETA checker." }],
-    AE: [{ label: "UAE government tourist visa", url: "https://u.ae/en/information-and-services/visa-and-emirates-id/tourist-visa", note: "Official UAE government tourist visa guidance." }],
-    TH: [{ label: "Thailand e-Visa", url: "https://www.thaievisa.go.th/", note: "Official Thailand Ministry of Foreign Affairs e-Visa portal." }],
-    IL: [{ label: "ETA-IL official authority", url: "https://israel-entry.piba.gov.il/learn-about", note: "Official Israel Population and Immigration Authority ETA-IL portal." }],
-  };
-
   const routeSegments = trip.segments.map((segment) => ({
     departure_airport: segment.departure_airport,
     arrival_airport: segment.arrival_airport,
@@ -1456,7 +2008,7 @@ function buildRequirementSources(trip) {
   const seen = new Set();
   const destinationSources = [];
   for (const segment of routeSegments) {
-    for (const source of byCountry[segment.arrival_country_code] || []) {
+    for (const source of buildRequirementSourcesForCountry(segment.arrival_country_code)) {
       if (!seen.has(source.url)) {
         destinationSources.push(source);
         seen.add(source.url);
@@ -1479,8 +2031,23 @@ function buildRequirementSources(trip) {
   };
 }
 
+function buildRequirementSourcesForCountry(countryCode) {
+  if (!countryCode) return [];
+  return officialVisaSources[countryCode] || [];
+}
+
+function uniqueSourcesByUrl(sources) {
+  const seen = new Set();
+  return sources.filter((source) => {
+    if (!source.url || seen.has(source.url)) return false;
+    seen.add(source.url);
+    return true;
+  });
+}
+
 function countryCodeForAirport(iata) {
   const airport = airports[iata] || {};
+  if (airport.countryCode) return airport.countryCode;
   const byCountryName = {
     Israel: "IL",
     Cyprus: "CY",
@@ -1488,6 +2055,10 @@ function countryCodeForAirport(iata) {
     "United Kingdom": "GB",
     "United Arab Emirates": "AE",
     Thailand: "TH",
+    "United States": "US",
+    France: "FR",
+    Germany: "DE",
+    Greece: "GR",
   };
   return byCountryName[airport.country] || "";
 }

@@ -97,6 +97,137 @@ h2 {
   gap: 8px;
 }
 
+.service-hub {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.service-tile {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-height: 132px;
+  border-color: rgba(220, 228, 239, 0.95);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: var(--shadow-soft);
+  padding: 18px;
+  text-align: left;
+}
+
+.service-tile span {
+  color: var(--coral);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.service-tile strong {
+  font-size: 1.08rem;
+  line-height: 1.32;
+}
+
+.service-tile.active {
+  border-color: rgba(15, 123, 128, 0.32);
+  background:
+    linear-gradient(135deg, rgba(15, 123, 128, 0.1), rgba(40, 95, 214, 0.1)),
+    #ffffff;
+}
+
+.standalone-tool {
+  margin-bottom: 30px;
+}
+
+.tool-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.tool-card {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: var(--shadow-soft);
+  padding: 20px;
+}
+
+.tool-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+  margin-bottom: 16px;
+}
+
+.tool-card-head h2 {
+  margin-top: 6px;
+}
+
+.tool-card-head p {
+  margin-top: 8px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.official-source-list {
+  display: grid;
+  gap: 10px;
+}
+
+.official-source-list h3 {
+  margin: 6px 0 0;
+  font-size: 1rem;
+}
+
+.destination-check-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.destination-check {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-strong);
+  padding: 12px;
+  cursor: pointer;
+}
+
+.destination-check input {
+  margin-top: 4px;
+  accent-color: var(--teal);
+}
+
+.destination-check b,
+.destination-check small {
+  display: block;
+}
+
+.destination-check small {
+  margin-top: 4px;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.visa-source-card {
+  box-shadow: none;
+}
+
+.destination-tool-card {
+  overflow: hidden;
+}
+
+.destination-picker {
+  min-width: 260px;
+}
+
 .workspace {
   display: grid;
   grid-template-columns: minmax(300px, 0.82fr) minmax(0, 1.5fr);
@@ -1017,6 +1148,11 @@ pre {
     gap: 34px;
   }
 
+  .service-hub,
+  .tool-layout {
+    grid-template-columns: 1fr;
+  }
+
   .summary-grid,
   .detail-grid,
   .priority-facts,
@@ -1078,10 +1214,20 @@ pre {
 
   .requirement-hero,
   .requirement-card-head,
+  .tool-card-head,
   .destination-hero,
   .destination-card-head {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .destination-check-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .destination-picker {
+    min-width: 0;
+    width: 100%;
   }
 
   .destination-badges {

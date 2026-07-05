@@ -3,22 +3,41 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Flights Agent</title>
+    <title>co-travel | your travel assistance agent</title>
     <link rel="stylesheet" href="./styles.css">
   </head>
   <body>
     <main class="shell">
       <header class="topbar">
         <div>
-          <h1>Flights Agent</h1>
-          <p class="subtitle">Ticket intelligence for route, passenger, timing, baggage, and document checks.</p>
+          <h1>co-travel</h1>
+          <p class="subtitle">your travel assistance agent</p>
         </div>
         <div class="top-actions" aria-label="Runtime capabilities">
+          <span class="pill">Requirements</span>
+          <span class="pill">Visas</span>
+          <span class="pill">Destination info</span>
           <span class="pill">PDF</span>
           <span class="pill">Image OCR</span>
-          <span class="pill">TXT</span>
         </div>
       </header>
+
+      <section class="service-hub" aria-label="Travel assistance tools">
+        <button class="service-tile active" type="button" data-service="requirements">
+          <span>Check requirements</span>
+          <strong>Build a passenger and route query before you scan a ticket.</strong>
+        </button>
+        <button class="service-tile" type="button" data-service="visa">
+          <span>Issue visa</span>
+          <strong>Choose up to 5 destinations and open official visa sites only.</strong>
+        </button>
+        <button class="service-tile" type="button" data-service="destination">
+          <span>Destination info</span>
+          <strong>Weather, warnings, currency, and events by city or country.</strong>
+        </button>
+      </section>
+
+      <section id="standaloneToolPanel" class="standalone-tool" aria-live="polite"></section>
 
       <section class="workspace" aria-label="Flight parser workspace">
         <section class="source-panel" aria-labelledby="source-title">
