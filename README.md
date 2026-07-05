@@ -56,7 +56,7 @@ This repo supports three public deployment paths:
 1. GitHub Pages static app
    - URL after Pages is enabled: `https://giligus.github.io/Flights-agent/`
    - Source folder: `site/`
-   - Workflow: `.github/workflows/deploy-pages.yml`
+   - Deployed by GitHub Pages from the repository root.
    - Runs directly in the browser with PDF text extraction and image/scanned-PDF OCR.
 
 2. Streamlit server app
@@ -72,13 +72,13 @@ GitHub Pages cannot run the Python/Streamlit server directly, so the Pages versi
 
 ### GitHub Pages
 
-The repo includes a GitHub Actions workflow that deploys the `site/` folder to GitHub Pages.
+The repo includes a root `index.html` that redirects visitors into the static app under `site/`.
 
 If the Pages URL is not live yet, open the repository settings:
 
 1. Go to `Settings` -> `Pages`.
-2. Set `Build and deployment` source to `GitHub Actions`.
-3. Run or wait for the `Deploy GitHub Pages` workflow.
+2. Set `Build and deployment` source to deploy from the `main` branch root.
+3. Wait for the `pages-build-deployment` workflow.
 
 Public URL:
 
