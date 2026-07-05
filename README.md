@@ -51,7 +51,7 @@ streamlit run streamlit_flights.py
 
 ## Deploy From GitHub
 
-This repo supports two public deployment paths:
+This repo supports three public deployment paths:
 
 1. GitHub Pages static app
    - URL after Pages is enabled: `https://giligus.github.io/Flights-agent/`
@@ -63,7 +63,12 @@ This repo supports two public deployment paths:
    - Main file path: `streamlit_flights.py`
    - Supports the full Python flow and the optional Gemini-backed extraction path.
 
-GitHub Pages cannot run the Python/Streamlit server directly, so the Pages version is a static browser app. It can read TXT files, extract digital-PDF text with PDF.js, and OCR images or scanned PDFs with Tesseract.js in the browser. Use Streamlit Community Cloud or another Python host for the full Python runtime, Gemini-backed extraction, and server-side OCR.
+3. Railway Docker app
+   - Uses `Dockerfile` and `railway.json`
+   - Runs the full Streamlit/Python app with server-side OCR.
+   - Keeps API keys in Railway environment variables.
+
+GitHub Pages cannot run the Python/Streamlit server directly, so the Pages version is a static browser app. It can read TXT files, extract digital-PDF text with PDF.js, and OCR images or scanned PDFs with Tesseract.js in the browser. Use Railway, Streamlit Community Cloud, or another Python host for the full Python runtime, Gemini-backed extraction, server-side OCR, and future TravelDoc/IATA API proxying.
 
 ### GitHub Pages
 
@@ -99,9 +104,33 @@ GEMINI_API_KEY = "your-key-here"
 
 The app still runs without `GEMINI_API_KEY` by using the local parser fallback. Add the secret only when you want the Gemini-backed extraction path in the deployed app.
 
+### Railway
+
+This repository includes a Docker-based Railway deployment setup.
+
+Recommended Railway settings:
+
+- Repository: `giligus/Flights-agent`
+- Branch: `main`
+- Builder: Dockerfile
+- Dockerfile path: `Dockerfile`
+- Healthcheck path: `/_stcore/health`
+
+Runtime variables:
+
+```text
+GEMINI_API_KEY=optional-gemini-key
+TRAVELDOC_API_KEY=optional-future-traveldoc-key
+IATA_TIMATIC_API_KEY=optional-future-iata-key
+```
+
+Railway injects `PORT` automatically. The Docker command uses that value for Streamlit.
+
 ## Travel Requirements
 
 The app derives route legs from the parsed itinerary and shows passenger requirement checkers from TravelDoc/IATA plus official destination-government sources where known. Requirements are not finalized inside the app because visa and entry rules depend on citizenship, passport type, residence permits, transit details, travel date, and stay length.
+
+For integrated TravelDoc/IATA results, use Railway or another backend host as a server-side proxy. Do not put provider API keys in the GitHub Pages static app.
 
 ## Notes For GitHub
 
