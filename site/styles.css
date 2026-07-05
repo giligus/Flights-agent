@@ -476,6 +476,7 @@ button:focus {
 
 .tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   border-bottom: 0;
   margin-bottom: 18px;
@@ -706,6 +707,189 @@ button:focus {
   gap: 10px;
 }
 
+.destination-briefing {
+  display: grid;
+  gap: 16px;
+}
+
+.destination-hero,
+.destination-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow-soft);
+}
+
+.destination-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 22px;
+  background:
+    linear-gradient(135deg, rgba(15, 123, 128, 0.1), rgba(40, 95, 214, 0.1)),
+    #ffffff;
+}
+
+.destination-hero h3 {
+  margin: 8px 0 0;
+  font-size: 1.9rem;
+}
+
+.destination-hero p {
+  margin-top: 6px;
+  color: var(--muted);
+}
+
+.destination-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.destination-badges span {
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid rgba(40, 95, 214, 0.16);
+  box-shadow: var(--shadow-soft);
+  color: #1f3f78;
+  font-weight: 780;
+  padding: 9px 12px;
+}
+
+.destination-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.destination-card {
+  padding: 18px;
+}
+
+.destination-card-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.destination-card h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.destination-card p {
+  margin-top: 6px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.live-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.weather-current {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.weather-current div,
+.forecast-row div,
+.currency-rate,
+.panel-loading,
+.panel-error {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-strong);
+  padding: 12px;
+}
+
+.weather-current span,
+.forecast-row span,
+.currency-rate span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.76rem;
+  text-transform: uppercase;
+}
+
+.weather-current b,
+.forecast-row b,
+.currency-rate b {
+  display: block;
+  margin-top: 7px;
+  font-size: 1.05rem;
+}
+
+.weather-current small,
+.forecast-row small,
+.currency-rate small {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+}
+
+.forecast-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.currency-rate {
+  display: grid;
+  gap: 4px;
+}
+
+.panel-loading {
+  color: var(--muted);
+}
+
+.panel-error {
+  background: var(--red-soft);
+  color: #9d2929;
+}
+
+.warning-card {
+  border-color: rgba(201, 133, 24, 0.24);
+}
+
+.warning-list {
+  display: grid;
+  gap: 10px;
+}
+
+.destination-link {
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-strong);
+  padding: 12px;
+  color: var(--ink);
+  text-decoration: none;
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+.destination-link:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-soft);
+}
+
+.destination-link b,
+.destination-link span {
+  display: block;
+}
+
+.destination-link span {
+  margin-top: 6px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
 .requirement-card a {
   color: var(--teal);
   font-weight: 760;
@@ -844,6 +1028,10 @@ pre {
     grid-template-columns: 1fr;
   }
 
+  .destination-grid {
+    grid-template-columns: 1fr;
+  }
+
   .priority-strip {
     grid-template-columns: 1fr;
   }
@@ -889,9 +1077,20 @@ pre {
   }
 
   .requirement-hero,
-  .requirement-card-head {
+  .requirement-card-head,
+  .destination-hero,
+  .destination-card-head {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .destination-badges {
+    justify-content: flex-start;
+  }
+
+  .weather-current,
+  .forecast-row {
+    grid-template-columns: 1fr;
   }
 
   .route-line {

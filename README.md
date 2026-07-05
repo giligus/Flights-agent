@@ -132,6 +132,8 @@ The app derives route legs from the parsed itinerary and shows passenger require
 
 The GitHub Pages app includes a Requirements workspace with passenger-input fields, a provider-ready query packet, copyable JSON, and pending result cards for TravelDoc/IATA. These components prepare the exact payload needed by a future Railway backend, but they do not show final visa decisions without licensed provider credentials.
 
+The app also includes a Destination tab with weather, currency, warning channels, and event links. Weather uses Open-Meteo in the browser, currency uses Frankfurter exchange rates, and warnings/events point to official advisory, disaster-alert, meteorological, and tourism sources.
+
 For integrated TravelDoc/IATA results, use Railway or another backend host as a server-side proxy. Do not put provider API keys in the GitHub Pages static app.
 
 ## Notes For GitHub

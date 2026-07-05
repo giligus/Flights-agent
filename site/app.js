@@ -1,14 +1,94 @@
 const airports = {
-  TLV: { city: "Tel Aviv", country: "Israel", timezone: "Asia/Jerusalem" },
-  LCA: { city: "Larnaca", country: "Cyprus", timezone: "Asia/Nicosia" },
-  LHR: { city: "London", country: "United Kingdom", timezone: "Europe/London" },
-  JFK: { city: "New York", country: "United States", timezone: "America/New_York" },
-  CDG: { city: "Paris", country: "France", timezone: "Europe/Paris" },
-  FCO: { city: "Rome", country: "Italy", timezone: "Europe/Rome" },
-  MXP: { city: "Milan", country: "Italy", timezone: "Europe/Rome" },
-  VCE: { city: "Venice", country: "Italy", timezone: "Europe/Rome" },
-  ATH: { city: "Athens", country: "Greece", timezone: "Europe/Athens" },
-  DXB: { city: "Dubai", country: "United Arab Emirates", timezone: "Asia/Dubai" },
+  TLV: {
+    city: "Tel Aviv",
+    country: "Israel",
+    timezone: "Asia/Jerusalem",
+    lat: 32.0853,
+    lon: 34.7818,
+    currency: "ILS",
+    countryCode: "IL",
+  },
+  LCA: {
+    city: "Larnaca",
+    country: "Cyprus",
+    timezone: "Asia/Nicosia",
+    lat: 34.9003,
+    lon: 33.6232,
+    currency: "EUR",
+    countryCode: "CY",
+  },
+  LHR: {
+    city: "London",
+    country: "United Kingdom",
+    timezone: "Europe/London",
+    lat: 51.4700,
+    lon: -0.4543,
+    currency: "GBP",
+    countryCode: "GB",
+  },
+  JFK: {
+    city: "New York",
+    country: "United States",
+    timezone: "America/New_York",
+    lat: 40.6413,
+    lon: -73.7781,
+    currency: "USD",
+    countryCode: "US",
+  },
+  CDG: {
+    city: "Paris",
+    country: "France",
+    timezone: "Europe/Paris",
+    lat: 49.0097,
+    lon: 2.5479,
+    currency: "EUR",
+    countryCode: "FR",
+  },
+  FCO: {
+    city: "Rome",
+    country: "Italy",
+    timezone: "Europe/Rome",
+    lat: 41.8003,
+    lon: 12.2389,
+    currency: "EUR",
+    countryCode: "IT",
+  },
+  MXP: {
+    city: "Milan",
+    country: "Italy",
+    timezone: "Europe/Rome",
+    lat: 45.6306,
+    lon: 8.7281,
+    currency: "EUR",
+    countryCode: "IT",
+  },
+  VCE: {
+    city: "Venice",
+    country: "Italy",
+    timezone: "Europe/Rome",
+    lat: 45.5053,
+    lon: 12.3519,
+    currency: "EUR",
+    countryCode: "IT",
+  },
+  ATH: {
+    city: "Athens",
+    country: "Greece",
+    timezone: "Europe/Athens",
+    lat: 37.9364,
+    lon: 23.9445,
+    currency: "EUR",
+    countryCode: "GR",
+  },
+  DXB: {
+    city: "Dubai",
+    country: "United Arab Emirates",
+    timezone: "Asia/Dubai",
+    lat: 25.2532,
+    lon: 55.3657,
+    currency: "AED",
+    countryCode: "AE",
+  },
 };
 
 const monthMap = {
@@ -89,6 +169,7 @@ const resultNotice = document.querySelector("#resultNotice");
 const summaryGrid = document.querySelector("#summaryGrid");
 const importantPanel = document.querySelector("#importantPanel");
 const itineraryTab = document.querySelector("#itineraryTab");
+const destinationTab = document.querySelector("#destinationTab");
 const requirementsTab = document.querySelector("#requirementsTab");
 const tableTab = document.querySelector("#tableTab");
 const dataTab = document.querySelector("#dataTab");
@@ -167,6 +248,7 @@ document.querySelectorAll(".tab").forEach((button) => {
     button.classList.add("active");
     const active = button.dataset.tab;
     itineraryTab.classList.toggle("hidden", active !== "itinerary");
+    destinationTab.classList.toggle("hidden", active !== "destination");
     requirementsTab.classList.toggle("hidden", active !== "requirements");
     tableTab.classList.toggle("hidden", active !== "table");
     dataTab.classList.toggle("hidden", active !== "data");
@@ -509,6 +591,8 @@ function renderTrip(trip) {
 
   importantPanel.innerHTML = renderImportantPanel(trip);
   itineraryTab.innerHTML = trip.segments.map(renderSegment).join("");
+  destinationTab.innerHTML = renderDestinationBriefing(trip);
+  loadDestinationBriefing(trip);
   requirementsTab.innerHTML = renderRequirements(trip);
   bindRequirementComponents(trip);
   tableTab.innerHTML = renderTable(trip);
@@ -588,6 +672,433 @@ function airportLabel(code, city, country) {
 
 function destinationLabel(segment) {
   return airportLabel(segment.arrival_airport, segment.arrival_city, segment.arrival_country_name);
+}
+
+function renderDestinationBriefing(trip) {
+  const profile = buildDestinationProfile(trip);
+  return `
+    <div class="destination-briefing">
+      <article class="destination-hero">
+        <div>
+          <div class="summary-label">Destination briefing</div>
+          <h3>${escapeHtml(profile.city || profile.airport || "Destination")}</h3>
+          <p>${escapeHtml(profile.country || "Country pending")} / ${escapeHtml(profile.airport || "-")} / ${escapeHtml(
+            profile.timezone || "timezone pending"
+          )}</p>
+        </div>
+        <div class="destination-badges">
+          <span>${escapeHtml(profile.currency || "Currency")}</span>
+          <span>${escapeHtml(profile.travelDate || "Travel date pending")}</span>
+        </div>
+      </article>
+
+      <div class="destination-grid">
+        <article class="destination-card">
+          <div class="destination-card-head">
+            <div>
+              <h3>Weather</h3>
+              <p>Forecast near the arrival city or airport.</p>
+            </div>
+            <span class="provider-badge">Open-Meteo</span>
+          </div>
+          <div id="weatherPanel" class="live-panel">${renderLoading("Loading weather...")}</div>
+        </article>
+
+        <article class="destination-card">
+          <div class="destination-card-head">
+            <div>
+              <h3>Currency</h3>
+              <p>Simple reference rate for arrival currency.</p>
+            </div>
+            <span class="provider-badge">${escapeHtml(profile.currency || "Currency")}</span>
+          </div>
+          <div id="currencyPanel" class="live-panel">${renderLoading("Loading currency...")}</div>
+        </article>
+
+        <article class="destination-card warning-card">
+          <div class="destination-card-head">
+            <div>
+              <h3>Warnings</h3>
+              <p>Security, disaster, and weather-warning channels.</p>
+            </div>
+            <span class="provider-badge">Official links</span>
+          </div>
+          <div class="warning-list">
+            ${profile.warningLinks.map(renderDestinationLink).join("")}
+          </div>
+        </article>
+
+        <article class="destination-card">
+          <div class="destination-card-head">
+            <div>
+              <h3>Upcoming events</h3>
+              <p>Official tourism and city event calendars.</p>
+            </div>
+            <span class="provider-badge">Calendar links</span>
+          </div>
+          <div class="warning-list">
+            ${profile.eventLinks.map(renderDestinationLink).join("")}
+          </div>
+        </article>
+      </div>
+    </div>
+  `;
+}
+
+async function loadDestinationBriefing(trip) {
+  const profile = buildDestinationProfile(trip);
+  await Promise.allSettled([loadWeatherPanel(profile), loadCurrencyPanel(profile)]);
+}
+
+async function loadWeatherPanel(profile) {
+  const panel = document.querySelector("#weatherPanel");
+  if (!panel) return;
+  if (profile.lat == null || profile.lon == null) {
+    panel.innerHTML = renderPanelError("No coordinates mapped for this airport yet.");
+    return;
+  }
+
+  try {
+    const params = new URLSearchParams({
+      latitude: String(profile.lat),
+      longitude: String(profile.lon),
+      current: "temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code",
+      daily: "temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code",
+      timezone: profile.timezone || "auto",
+      forecast_days: "4",
+    });
+    const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`);
+    if (!response.ok) throw new Error(`Weather request failed (${response.status})`);
+    const data = await response.json();
+    panel.innerHTML = renderWeatherData(data);
+  } catch (error) {
+    panel.innerHTML = renderPanelError(error.message || "Could not load weather.");
+  }
+}
+
+async function loadCurrencyPanel(profile) {
+  const panel = document.querySelector("#currencyPanel");
+  if (!panel) return;
+  if (!profile.currency || profile.currency === "USD") {
+    panel.innerHTML = renderCurrencyData({ base: "USD", target: profile.currency || "USD", rate: 1 });
+    return;
+  }
+
+  try {
+    const response = await fetch(`https://api.frankfurter.dev/v1/latest?base=USD&symbols=${encodeURIComponent(profile.currency)}`);
+    if (!response.ok) throw new Error(`Currency request failed (${response.status})`);
+    const data = await response.json();
+    panel.innerHTML = renderCurrencyData({ base: "USD", target: profile.currency, rate: data.rates?.[profile.currency], date: data.date });
+  } catch (error) {
+    panel.innerHTML = renderPanelError(error.message || "Could not load currency.");
+  }
+}
+
+function renderWeatherData(data) {
+  const current = data.current || {};
+  const daily = data.daily || {};
+  const today = {
+    min: daily.temperature_2m_min?.[0],
+    max: daily.temperature_2m_max?.[0],
+    rain: daily.precipitation_probability_max?.[0],
+    code: current.weather_code ?? daily.weather_code?.[0],
+  };
+  return `
+    <div class="weather-current">
+      <div>
+        <span>Now</span>
+        <b>${escapeHtml(formatTemperature(current.temperature_2m))}</b>
+        <small>${escapeHtml(weatherCodeLabel(today.code))}</small>
+      </div>
+      <div>
+        <span>Wind</span>
+        <b>${escapeHtml(formatSpeed(current.wind_speed_10m))}</b>
+        <small>${escapeHtml(formatHumidity(current.relative_humidity_2m))}</small>
+      </div>
+    </div>
+    <div class="forecast-row">
+      ${daily.time
+        ?.map(
+          (day, index) => `
+            <div>
+              <span>${escapeHtml(shortDate(day))}</span>
+              <b>${escapeHtml(formatTemperatureRange(daily.temperature_2m_min?.[index], daily.temperature_2m_max?.[index]))}</b>
+              <small>${escapeHtml(formatRain(daily.precipitation_probability_max?.[index]))}</small>
+            </div>
+          `
+        )
+        .join("") || ""}
+    </div>
+  `;
+}
+
+function renderCurrencyData({ base, target, rate, date }) {
+  if (!rate) return renderPanelError("No exchange rate returned.");
+  const inverse = rate ? 1 / rate : 0;
+  return `
+    <div class="currency-rate">
+      <span>${escapeHtml(base)} to ${escapeHtml(target)}</span>
+      <b>1 ${escapeHtml(base)} = ${escapeHtml(rate.toFixed(3))} ${escapeHtml(target)}</b>
+      <small>${escapeHtml(inverse ? `1 ${target} = ${inverse.toFixed(3)} ${base}` : "")}</small>
+      <small>${escapeHtml(date ? `Rate date: ${date}` : "Reference rate")}</small>
+    </div>
+  `;
+}
+
+function buildDestinationProfile(trip) {
+  const firstSegment = trip.segments[0] || {};
+  const finalSegment = trip.segments[trip.segments.length - 1] || firstSegment;
+  const airport = airports[finalSegment.arrival_airport] || {};
+  const countryCode = airport.countryCode || countryCodeForAirport(finalSegment.arrival_airport);
+  const country = finalSegment.arrival_country_name || airport.country || "";
+  return {
+    airport: finalSegment.arrival_airport || "",
+    city: finalSegment.arrival_city || airport.city || "",
+    country,
+    countryCode,
+    timezone: finalSegment.arrival_timezone || airport.timezone || "",
+    currency: airport.currency || currencyForCountry(countryCode),
+    lat: airport.lat,
+    lon: airport.lon,
+    travelDate: (firstSegment.departure_datetime_local || "").split(" ")[0] || "",
+    warningLinks: buildWarningLinks(countryCode, country),
+    eventLinks: buildEventLinks(countryCode, airport.city || finalSegment.arrival_city, country),
+  };
+}
+
+function buildWarningLinks(countryCode, countryName) {
+  const stateSlug = {
+    CY: "Cyprus",
+    IL: "IsraeltheWestBankandGaza",
+    IT: "Italy",
+    GB: "UnitedKingdom",
+    AE: "UnitedArabEmirates",
+    TH: "Thailand",
+    US: "UnitedStates",
+    FR: "France",
+    DE: "Germany",
+    GR: "Greece",
+  }[countryCode];
+  const links = [
+    {
+      label: "U.S. travel advisory",
+      url: stateSlug
+        ? `https://travel.state.gov/content/travel/en/international-travel/International-Travel-Country-Information-Pages/${stateSlug}.html`
+        : "https://travel.state.gov/content/travel/en/international-travel.html",
+      note: countryName ? `Security and safety advisory for ${countryName}.` : "Security and safety advisories by country.",
+    },
+    {
+      label: "UK foreign travel advice",
+      url: "https://www.gov.uk/foreign-travel-advice",
+      note: "Official UK country-specific safety, entry, health, and crisis guidance.",
+    },
+    {
+      label: "GDACS disaster alerts",
+      url: "https://www.gdacs.org/",
+      note: "Global disaster alerts for earthquakes, floods, tropical cyclones, volcanoes, and related hazards.",
+    },
+    {
+      label: "WHO outbreak news",
+      url: "https://www.who.int/emergencies/disease-outbreak-news",
+      note: "Official global disease outbreak updates from the World Health Organization.",
+    },
+  ];
+  const weatherLink = officialWeatherLink(countryCode);
+  if (weatherLink) links.push(weatherLink);
+  return links;
+}
+
+function buildEventLinks(countryCode, city, countryName) {
+  const byCountry = {
+    CY: [
+      {
+        label: "Visit Cyprus events",
+        url: "https://www.visitcyprus.com/index.php/en/discovercyprus/events",
+        note: "Official Cyprus tourism event listings.",
+      },
+    ],
+    IL: [
+      {
+        label: "Tel Aviv events",
+        url: "https://www.visit-tel-aviv.com/",
+        note: "Official Tel Aviv visitor information and event discovery.",
+      },
+    ],
+    IT: [
+      {
+        label: "Italia.it events",
+        url: "https://www.italia.it/en/events",
+        note: "Official Italian tourism events.",
+      },
+    ],
+    GB: [
+      {
+        label: "VisitBritain events",
+        url: "https://www.visitbritain.com/en/things-to-do/events",
+        note: "Official UK visitor event inspiration.",
+      },
+    ],
+    AE: [
+      {
+        label: "Visit Dubai events",
+        url: "https://www.visitdubai.com/en/whats-on",
+        note: "Official Dubai event calendar.",
+      },
+    ],
+    TH: [
+      {
+        label: "Tourism Thailand events",
+        url: "https://www.tourismthailand.org/Events-and-Festivals",
+        note: "Official Tourism Authority of Thailand event listings.",
+      },
+    ],
+    US: [
+      {
+        label: "Visit The USA events",
+        url: "https://www.visittheusa.com/events",
+        note: "Official U.S. tourism event listings.",
+      },
+    ],
+    FR: [
+      {
+        label: "Explore France events",
+        url: "https://www.france.fr/en/events/",
+        note: "Official French tourism event listings.",
+      },
+    ],
+    GR: [
+      {
+        label: "Visit Greece events",
+        url: "https://www.visitgreece.gr/events/",
+        note: "Official Greek tourism event listings.",
+      },
+    ],
+    DE: [
+      {
+        label: "Germany tourism events",
+        url: "https://www.germany.travel/en/events/events.html",
+        note: "Official German tourism event listings.",
+      },
+    ],
+  };
+  return (
+    byCountry[countryCode] || [
+      {
+        label: `${city || countryName || "Destination"} events`,
+        url: "",
+        note: "No official event calendar is mapped yet for this destination.",
+      },
+    ]
+  );
+}
+
+function officialWeatherLink(countryCode) {
+  const links = {
+    CY: { label: "Cyprus weather service", url: "https://www.dom.org.cy/", note: "Official Cyprus Department of Meteorology." },
+    IL: { label: "Israel weather service", url: "https://ims.gov.il/", note: "Official Israel Meteorological Service." },
+    IT: { label: "Italy weather service", url: "https://www.meteoam.it/", note: "Official Italian Air Force weather service." },
+    GB: { label: "UK Met Office warnings", url: "https://www.metoffice.gov.uk/weather/warnings-and-advice/uk-warnings", note: "Official UK weather warnings." },
+    AE: { label: "UAE weather service", url: "https://www.ncm.ae/", note: "Official UAE National Center of Meteorology." },
+    US: { label: "U.S. weather alerts", url: "https://www.weather.gov/alerts", note: "Official National Weather Service alerts." },
+    FR: { label: "France weather alerts", url: "https://vigilance.meteofrance.fr/", note: "Official Meteo-France weather warnings." },
+    GR: { label: "Greece weather service", url: "https://www.emy.gr/", note: "Official Hellenic National Meteorological Service." },
+    DE: { label: "Germany weather warnings", url: "https://www.dwd.de/EN/weather/warnings/warnings_node.html", note: "Official German Weather Service warnings." },
+  };
+  return links[countryCode] || null;
+}
+
+function renderDestinationLink(source) {
+  if (!source.url) {
+    return `
+      <div class="destination-link destination-link-muted">
+        <b>${escapeHtml(source.label)}</b>
+        <span>${escapeHtml(source.note)}</span>
+      </div>
+    `;
+  }
+  return `
+    <a class="destination-link" href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer">
+      <b>${escapeHtml(source.label)}</b>
+      <span>${escapeHtml(source.note)}</span>
+    </a>
+  `;
+}
+
+function renderLoading(message) {
+  return `<div class="panel-loading">${escapeHtml(message)}</div>`;
+}
+
+function renderPanelError(message) {
+  return `<div class="panel-error">${escapeHtml(message)}</div>`;
+}
+
+function currencyForCountry(countryCode) {
+  return {
+    CY: "EUR",
+    IL: "ILS",
+    IT: "EUR",
+    GB: "GBP",
+    AE: "AED",
+    TH: "THB",
+    US: "USD",
+    FR: "EUR",
+    DE: "EUR",
+    GR: "EUR",
+  }[countryCode] || "";
+}
+
+function weatherCodeLabel(code) {
+  const labels = {
+    0: "Clear",
+    1: "Mostly clear",
+    2: "Partly cloudy",
+    3: "Overcast",
+    45: "Fog",
+    48: "Rime fog",
+    51: "Light drizzle",
+    53: "Drizzle",
+    55: "Dense drizzle",
+    61: "Light rain",
+    63: "Rain",
+    65: "Heavy rain",
+    71: "Light snow",
+    73: "Snow",
+    75: "Heavy snow",
+    80: "Rain showers",
+    81: "Rain showers",
+    82: "Heavy showers",
+    95: "Thunderstorm",
+    96: "Thunderstorm with hail",
+    99: "Thunderstorm with hail",
+  };
+  return labels[code] || "Forecast";
+}
+
+function formatTemperature(value) {
+  return value == null ? "-" : `${Math.round(value)} C`;
+}
+
+function formatTemperatureRange(min, max) {
+  if (min == null || max == null) return "-";
+  return `${Math.round(min)}-${Math.round(max)} C`;
+}
+
+function formatSpeed(value) {
+  return value == null ? "-" : `${Math.round(value)} km/h`;
+}
+
+function formatHumidity(value) {
+  return value == null ? "" : `${Math.round(value)}% humidity`;
+}
+
+function formatRain(value) {
+  return value == null ? "Rain -%" : `Rain ${Math.round(value)}%`;
+}
+
+function shortDate(value) {
+  if (!value) return "-";
+  const date = new Date(`${value}T00:00:00`);
+  return date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 }
 
 function renderDetail(label, value) {
