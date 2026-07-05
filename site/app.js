@@ -149,15 +149,18 @@ function parseTicket(rawText) {
     /(?:booking\s+code|booking\s+reference|pnr)\s*[:\-]?\s*([A-Z0-9]{5,7})/i,
   ]);
   const ticket = matchFirst(rawText, [
-    /(?:ticket\s+number|ticket|etkt|tkt)\s*[:\-]?\s*(\d{10,14})/i,
+    /(?:ticket\s+number|etkt|tkt)\s*[:\-]?\s*(\d{10,14})/i,
+    /(\d{10,14})\s*(?:ticket\s+number|ticket\s+receipt)/i,
   ]);
   const passenger = cleanPassenger(
-    matchFirst(rawText, [/^\s*passenger\s*[:\-]\s*([A-Za-z\s]+?)(?:\(|$)/im])
+    matchFirst(rawText, [
+      /passenger\s*[:\-]\s*([A-Za-z][A-Za-z\s'.-]{1,80}?)(?:\s*\(|\s+(?:LY|EK|Ticket|Booking|Date|Issuing)\b|$)/i,
+    ])
   );
   const flightMatch = rawText.match(/\b([A-Z]{2,3})\s?(\d{2,4})\b/);
   const routeMatch = rawText.match(/\b([A-Z]{3})\s*[-/]\s*([A-Z]{3})\b/);
   const routeFromText = routeMatch ? [routeMatch[1], routeMatch[2]] : guessRoute(rawText);
-  const dateTimes = parseDateTimes(rawText);
+  const dateTimes = parseDateTimes(rawText, flightMatch ? flightMatch[0] : "");
 
   const segment = enrichSegment({
     airline_code: flightMatch ? flightMatch[1] : "",
@@ -168,9 +171,13 @@ function parseTicket(rawText) {
     arrival_airport: routeFromText[1] || "",
     departure_datetime_local: dateTimes.departure,
     arrival_datetime_local: dateTimes.arrival,
-    duration: matchFirst(rawText, [/duration\s*[:\n\r\s]+(\d{1,2}:\d{2})/i]),
+    duration: matchFirst(rawText, [/duration\s*:?\s*(\d{1,2}:\d{2})/i]),
     booking_class: matchFirst(rawText, [/economy\s*\(([A-Z])\)/i]),
-    baggage_allowance: matchFirst(rawText, [/baggage\s*[:\n\r\s]+([0-9A-Z ]{2,12})/i]),
+    baggage_allowance: matchFirst(rawText, [
+      /baggage\s*:?\s*([0-9]\s*PC(?:\s*\(\d+\))?)/i,
+      /\b([0-9]\s*PC(?:\s*\(\d+\))?)\b/i,
+      /baggage\s*:?\s*([0-9]{1,2}\s*(?:KG|KGS|LB|LBS))/i,
+    ]),
     seat: matchFirst(rawText, [/seat\s*[:\-]\s*([0-9]{1,2}[A-Z])/i]),
     gate: matchFirst(rawText, [/gate\s*[:\-]\s*([A-Z0-9]+)/i]),
   });
@@ -368,7 +375,30 @@ function guessRoute(rawText) {
   return ["", ""];
 }
 
-function parseDateTimes(rawText) {
+function parseDateTimes(rawText, flightToken = "") {
+  if (flightToken) {
+    const flightIndex = rawText.toUpperCase().indexOf(flightToken.replace(/\s+/g, "").toUpperCase());
+    const compactIndex =
+      flightIndex >= 0 ? flightIndex : rawText.toUpperCase().indexOf(flightToken.toUpperCase());
+    if (compactIndex >= 0) {
+      const tableTail = rawText.slice(compactIndex, compactIndex + 260);
+      const tableMatch = tableTail.match(
+        /\b\d{1,2}:\d{2}\b[\s\S]{0,30}?\b\d{1,2}[A-Za-z]{3}\d{2,4}\b[\s\S]{0,30}?\b\d{1,2}:\d{2}\b[\s\S]{0,30}?\b\d{1,2}[A-Za-z]{3}\d{2,4}\b/
+      );
+      if (tableMatch) {
+        const values = [...tableMatch[0].matchAll(/(\d{1,2}:\d{2})|(\d{1,2}[A-Za-z]{3}\d{2,4})/g)].map(
+          (match) => match[0]
+        );
+        if (values.length >= 4) {
+          return {
+            departure: parseMixedDate(values[1], values[0]),
+            arrival: parseMixedDate(values[3], values[2]),
+          };
+        }
+      }
+    }
+  }
+
   const blockMatch = rawText.match(
     /(\d{2}:\d{2})\s*\n\s*(\d{1,2}[A-Za-z]{3}\d{2,4})\s+(\d{2}:\d{2})\s*\n\s*(\d{1,2}[A-Za-z]{3}\d{2,4})/
   );
