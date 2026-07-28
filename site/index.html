@@ -9,57 +9,100 @@
   <body>
     <main class="shell">
       <header class="topbar">
-        <div>
-          <h1>co-travel</h1>
-          <p class="subtitle">your travel assistance agent</p>
+        <div class="brand-lockup">
+          <span class="brand-mark" aria-hidden="true"><i data-lucide="compass"></i></span>
+          <div>
+            <h1>co-travel</h1>
+            <p class="subtitle">your travel assistance agent</p>
+          </div>
         </div>
-        <div class="top-actions" aria-label="Runtime capabilities">
-          <span class="pill">Requirements</span>
-          <span class="pill">Visas</span>
-          <span class="pill">Destination info</span>
-          <span class="pill">PDF</span>
-          <span class="pill">Image OCR</span>
+        <div class="trust-note">
+          <i data-lucide="shield-check" aria-hidden="true"></i>
+          <span>Official sources and private browser-based ticket scanning</span>
         </div>
       </header>
 
-      <section class="service-hub" aria-label="Travel assistance tools">
-        <button class="service-tile active" type="button" data-service="requirements">
-          <span>Check requirements</span>
-          <strong>Build a passenger and route query before you scan a ticket.</strong>
+      <section id="homeIntro" class="home-intro">
+        <div class="summary-label">Travel planning, made clearer</div>
+        <h2>What would you like help with?</h2>
+        <p>Start with a ticket you already have, or plan the important parts of your trip.</p>
+      </section>
+
+      <section id="serviceHub" class="service-hub" aria-label="Travel assistance tools">
+        <button class="service-tile service-scan" type="button" data-service="scan">
+          <span class="service-icon" aria-hidden="true"><i data-lucide="file-search"></i></span>
+          <span class="service-copy">
+            <strong>Scan my ticket</strong>
+            <small>Upload a PDF or photo and organize the flight details.</small>
+          </span>
+          <i class="service-arrow" data-lucide="arrow-right" aria-hidden="true"></i>
         </button>
-        <button class="service-tile" type="button" data-service="visa">
-          <span>Issue visa</span>
-          <strong>Choose up to 5 destinations and open official visa sites only.</strong>
+        <button class="service-tile service-requirements" type="button" data-service="requirements">
+          <span class="service-icon" aria-hidden="true"><i data-lucide="clipboard-check"></i></span>
+          <span class="service-copy">
+            <strong>Check entry requirements</strong>
+            <small>Prepare passport, visa, transit, and health details.</small>
+          </span>
+          <i class="service-arrow" data-lucide="arrow-right" aria-hidden="true"></i>
         </button>
-        <button class="service-tile" type="button" data-service="destination">
-          <span>Destination info</span>
-          <strong>Weather, warnings, currency, and events by city or country.</strong>
+        <button class="service-tile service-visa" type="button" data-service="visa">
+          <span class="service-icon" aria-hidden="true"><i data-lucide="badge-check"></i></span>
+          <span class="service-copy">
+            <strong>Find an official visa site</strong>
+            <small>Choose up to 5 destinations and use government links only.</small>
+          </span>
+          <i class="service-arrow" data-lucide="arrow-right" aria-hidden="true"></i>
+        </button>
+        <button class="service-tile service-destination" type="button" data-service="destination">
+          <span class="service-icon" aria-hidden="true"><i data-lucide="map-pinned"></i></span>
+          <span class="service-copy">
+            <strong>Explore a destination</strong>
+            <small>See weather, currency, official advisories, and events.</small>
+          </span>
+          <i class="service-arrow" data-lucide="arrow-right" aria-hidden="true"></i>
         </button>
       </section>
 
-      <section id="standaloneToolPanel" class="standalone-tool" aria-live="polite"></section>
+      <section id="activeFlowBar" class="active-flow-bar hidden" aria-label="Current service">
+        <button id="backServicesBtn" class="flow-back" type="button">
+          <i data-lucide="arrow-left" aria-hidden="true"></i>
+          All services
+        </button>
+        <div>
+          <strong id="activeFlowTitle"></strong>
+          <span id="activeFlowDescription"></span>
+        </div>
+      </section>
 
-      <section class="workspace" aria-label="Flight parser workspace">
+      <section id="standaloneToolPanel" class="standalone-tool hidden" aria-live="polite"></section>
+
+      <section id="flightWorkspace" class="workspace hidden" aria-label="Flight parser workspace">
         <section class="source-panel" aria-labelledby="source-title">
           <div class="section-heading">
-            <h2 id="source-title">Source</h2>
-            <p>Paste text or upload a ticket file. The extracted text stays visible for review.</p>
+            <span class="section-icon icon-blue" aria-hidden="true"><i data-lucide="scan-line"></i></span>
+            <div>
+              <h2 id="source-title">Upload your ticket</h2>
+              <p>Use a PDF, screenshot, or clear photo. You can review every detected detail.</p>
+            </div>
           </div>
 
           <div class="mode-row" role="radiogroup" aria-label="Input mode">
             <label>
-              <input type="radio" name="mode" value="text" checked>
-              Paste text
+              <input type="radio" name="mode" value="file" checked>
+              <i data-lucide="upload" aria-hidden="true"></i>
+              Upload file
             </label>
             <label>
-              <input type="radio" name="mode" value="file">
-              Upload file
+              <input type="radio" name="mode" value="text">
+              <i data-lucide="text-cursor-input" aria-hidden="true"></i>
+              Paste text
             </label>
           </div>
 
-          <label id="dropZone" class="drop-zone hidden" for="ticketFile">
+          <label id="dropZone" class="drop-zone" for="ticketFile">
+            <span class="drop-icon" aria-hidden="true"><i data-lucide="file-up"></i></span>
             <span class="drop-title">Drop or choose a ticket</span>
-            <span class="drop-detail">PDF, PNG, JPG, JPEG, WebP, or TXT</span>
+            <span class="drop-detail">PDF, PNG, JPG, JPEG, WebP, or TXT. Your file stays in this browser.</span>
             <input id="ticketFile" type="file" accept=".txt,.pdf,.png,.jpg,.jpeg,.webp,text/plain,application/pdf,image/*">
           </label>
 
@@ -74,37 +117,38 @@
             </div>
           </div>
 
-          <label class="text-label" for="ticketText">Extracted ticket text</label>
-          <textarea id="ticketText" spellcheck="false">Passenger : Reuven Anat Ms (ADT)
-LY Booking code : YYLXCH
-Ticket number : 1142491403549
-
-From        To        Flight        Departure        Arrival
-LARNACA LARNACA        TEL AVIV YAFO BEN GURION INTL
-Terminal: 3        LY5136        00:50
-01Jul2025        01:55
-01Jul2025
-Class :
-Economy (Y)
-Baggage :
-2PC
-Duration :
-01:05</textarea>
+          <details id="textReview" class="text-review">
+            <summary>
+              <i data-lucide="file-text" aria-hidden="true"></i>
+              <span id="textReviewLabel">Review extracted text</span>
+              <small>Optional</small>
+            </summary>
+            <label class="text-label" for="ticketText">Ticket text</label>
+            <textarea id="ticketText" spellcheck="false" placeholder="Paste the text from your ticket here..."></textarea>
+          </details>
 
           <div class="actions">
-            <button id="analyzeBtn" class="primary" type="button">Analyze ticket</button>
+            <button id="analyzeBtn" class="primary" type="button">
+              <i data-lucide="sparkles" aria-hidden="true"></i>
+              Analyze ticket
+            </button>
             <button id="clearBtn" class="secondary" type="button">Clear</button>
           </div>
         </section>
 
         <section class="result-panel" aria-labelledby="result-title">
           <div class="section-heading">
-            <h2 id="result-title">Flight page</h2>
+            <span class="section-icon icon-teal" aria-hidden="true"><i data-lucide="plane"></i></span>
+            <div>
+              <h2 id="result-title">Your trip</h2>
+              <p>Important information first, with full details available when you need them.</p>
+            </div>
           </div>
 
           <div id="emptyState" class="empty-state">
-            <p>Ready</p>
-            <strong>Analyze a ticket to see the important flight details first.</strong>
+            <span class="empty-icon" aria-hidden="true"><i data-lucide="ticket-check"></i></span>
+            <strong>Your flight summary will appear here</strong>
+            <p>Upload a ticket, review the detected text, then choose Analyze ticket.</p>
           </div>
 
           <div id="results" class="hidden">
@@ -117,8 +161,8 @@ Duration :
               <button class="tab active" type="button" data-tab="itinerary">Itinerary</button>
               <button class="tab" type="button" data-tab="destination">Destination</button>
               <button class="tab" type="button" data-tab="requirements">Requirements</button>
-              <button class="tab" type="button" data-tab="table">Table</button>
-              <button class="tab" type="button" data-tab="data">Data</button>
+              <button class="tab" type="button" data-tab="table">All details</button>
+              <button class="tab" type="button" data-tab="data">Advanced</button>
             </div>
 
             <section id="itineraryTab" class="tab-panel"></section>
@@ -126,7 +170,10 @@ Duration :
             <section id="requirementsTab" class="tab-panel hidden"></section>
             <section id="tableTab" class="tab-panel hidden"></section>
             <section id="dataTab" class="tab-panel hidden">
-              <button id="downloadBtn" class="secondary" type="button">Download JSON</button>
+              <button id="downloadBtn" class="secondary" type="button">
+                <i data-lucide="download" aria-hidden="true"></i>
+                Download trip data
+              </button>
               <pre id="jsonOutput"></pre>
             </section>
           </div>
@@ -134,6 +181,7 @@ Duration :
       </section>
     </main>
 
+    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
     <script src="./app.js"></script>
   </body>
 </html>

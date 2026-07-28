@@ -326,6 +326,7 @@ const destinationDirectory = [
 const standaloneRequirementsState = {};
 const visaSelectionState = new Set(["IL"]);
 let standaloneDestinationKey = "TLV";
+let standaloneRequirementsStep = 1;
 const requirementsState = {};
 
 const ticketText = document.querySelector("#ticketText");
@@ -351,23 +352,53 @@ const dataTab = document.querySelector("#dataTab");
 const jsonOutput = document.querySelector("#jsonOutput");
 const downloadBtn = document.querySelector("#downloadBtn");
 const standaloneToolPanel = document.querySelector("#standaloneToolPanel");
+const homeIntro = document.querySelector("#homeIntro");
+const serviceHub = document.querySelector("#serviceHub");
+const activeFlowBar = document.querySelector("#activeFlowBar");
+const activeFlowTitle = document.querySelector("#activeFlowTitle");
+const activeFlowDescription = document.querySelector("#activeFlowDescription");
+const backServicesBtn = document.querySelector("#backServicesBtn");
+const flightWorkspace = document.querySelector("#flightWorkspace");
+const textReview = document.querySelector("#textReview");
+const textReviewLabel = document.querySelector("#textReviewLabel");
+
+const serviceDetails = {
+  scan: {
+    title: "Scan my ticket",
+    description: "Upload a PDF or photo, then review the detected flight details.",
+  },
+  requirements: {
+    title: "Check entry requirements",
+    description: "Tell us about the trip and traveler to prepare an official-source checklist.",
+  },
+  visa: {
+    title: "Find an official visa site",
+    description: "Choose up to five destinations and continue only to government sources.",
+  },
+  destination: {
+    title: "Explore a destination",
+    description: "See practical destination information in one easy-to-scan view.",
+  },
+};
 
 let currentTrip = null;
 let currentSourceType = "pasted_text";
 
 document.querySelectorAll(".service-tile").forEach((button) => {
   button.addEventListener("click", () => {
-    document.querySelectorAll(".service-tile").forEach((tile) => tile.classList.remove("active"));
-    button.classList.add("active");
-    renderStandaloneTool(button.dataset.service);
+    showService(button.dataset.service);
   });
 });
+
+backServicesBtn?.addEventListener("click", showHome);
 
 document.querySelectorAll("input[name='mode']").forEach((input) => {
   input.addEventListener("change", () => {
     const fileMode = input.value === "file" && input.checked;
     dropZone.classList.toggle("hidden", !fileMode);
     ticketText.classList.toggle("text-from-file", fileMode);
+    if (textReview) textReview.open = !fileMode;
+    if (textReviewLabel) textReviewLabel.textContent = fileMode ? "Review extracted text" : "Paste ticket text";
   });
 });
 
@@ -403,9 +434,10 @@ clearBtn.addEventListener("click", () => {
   fileMeta.classList.add("hidden");
   setStatus("", 0, false);
   currentTrip = null;
-  currentSourceType = "pasted_text";
+  currentSourceType = document.querySelector("input[name='mode']:checked")?.value === "file" ? "browser_text_file" : "pasted_text";
   results.classList.add("hidden");
   emptyState.classList.remove("hidden");
+  if (textReview) textReview.open = document.querySelector("input[name='mode']:checked")?.value === "text";
 });
 
 analyzeBtn.addEventListener("click", () => {
@@ -439,7 +471,40 @@ document.querySelectorAll(".tab").forEach((button) => {
   });
 });
 
-renderStandaloneTool("requirements");
+showHome();
+
+function showHome() {
+  homeIntro?.classList.remove("hidden");
+  serviceHub?.classList.remove("hidden");
+  activeFlowBar?.classList.add("hidden");
+  standaloneToolPanel?.classList.add("hidden");
+  flightWorkspace?.classList.add("hidden");
+  document.querySelectorAll(".service-tile").forEach((tile) => tile.classList.remove("active"));
+  refreshIcons();
+}
+
+function showService(service) {
+  const details = serviceDetails[service] || serviceDetails.scan;
+  homeIntro?.classList.add("hidden");
+  serviceHub?.classList.add("hidden");
+  activeFlowBar?.classList.remove("hidden");
+  if (activeFlowTitle) activeFlowTitle.textContent = details.title;
+  if (activeFlowDescription) activeFlowDescription.textContent = details.description;
+
+  const scanMode = service === "scan";
+  flightWorkspace?.classList.toggle("hidden", !scanMode);
+  standaloneToolPanel?.classList.toggle("hidden", scanMode);
+  if (!scanMode) {
+    if (service === "requirements") standaloneRequirementsStep = 1;
+    renderStandaloneTool(service);
+  }
+  refreshIcons();
+  activeFlowBar?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function refreshIcons() {
+  window.lucide?.createIcons();
+}
 
 function renderStandaloneTool(service) {
   if (!standaloneToolPanel) return;
@@ -447,60 +512,105 @@ function renderStandaloneTool(service) {
   if (service === "visa") {
     standaloneToolPanel.innerHTML = renderVisaTool();
     bindVisaTool();
+    refreshIcons();
     return;
   }
 
   if (service === "destination") {
     standaloneToolPanel.innerHTML = renderDestinationInfoTool();
     bindDestinationInfoTool();
+    refreshIcons();
     return;
   }
 
   standaloneToolPanel.innerHTML = renderStandaloneRequirements();
   bindStandaloneRequirements();
+  refreshIcons();
 }
 
 function renderStandaloneRequirements() {
+  const steps = ["Your trip", "Your passport", "Trip details"];
+  const stepFields = [
+    `${renderStandaloneSelectField("Where are you leaving from?", "originCountry", countryOptions)}
+     ${renderStandaloneSelectField("Where are you going?", "destinationCountry", countryOptions)}
+     ${renderStandaloneInputField("When do you travel?", "travelDate", "date")}`,
+    `${renderStandaloneSelectField("Your citizenship / nationality", "nationality", countryOptions)}
+     ${renderStandaloneSelectField("Passport issuing country", "passportCountry", countryOptions)}
+     ${renderStandaloneSelectField("Passport type", "passportType", passportTypeOptions)}
+     ${renderStandaloneInputField("Passport expiry", "passportExpiry", "date")}`,
+    `${renderStandaloneInputField("How many days will you stay?", "stayLengthDays", "number", "Days")}
+     ${renderStandaloneSelectField("Will you transit on the way?", "transitMode", transitOptions)}`,
+  ];
+
   return `
-    <div class="tool-layout">
-      <section class="tool-card">
+    <div class="tool-layout requirements-guide">
+      <section class="tool-card guide-card">
         <div class="tool-card-head">
-          <div>
-            <div class="summary-label">Check requirements</div>
-            <h2>Travel document query</h2>
-            <p>Build the inputs needed for visa, passport, transit, and health checks before uploading a ticket.</p>
+          <div class="heading-with-icon">
+            <span class="section-icon icon-teal" aria-hidden="true"><i data-lucide="clipboard-check"></i></span>
+            <div>
+              <div class="summary-label">Step ${standaloneRequirementsStep} of 3</div>
+              <h2>${escapeHtml(steps[standaloneRequirementsStep - 1])}</h2>
+              <p>Answer a few details at a time. We will keep your progress as you continue.</p>
+            </div>
           </div>
-          <span class="provider-badge">Independent</span>
+          <span class="provider-badge">About 2 minutes</span>
         </div>
-        <div class="requirements-form">
-          ${renderStandaloneSelectField("Origin country", "originCountry", countryOptions)}
-          ${renderStandaloneSelectField("Destination country", "destinationCountry", countryOptions)}
-          ${renderStandaloneSelectField("Citizenship / nationality", "nationality", countryOptions)}
-          ${renderStandaloneSelectField("Passport issuing country", "passportCountry", countryOptions)}
-          ${renderStandaloneSelectField("Passport type", "passportType", passportTypeOptions)}
-          ${renderStandaloneInputField("Passport expiry", "passportExpiry", "date")}
-          ${renderStandaloneInputField("Travel date", "travelDate", "date")}
-          ${renderStandaloneInputField("Stay length", "stayLengthDays", "number", "Days")}
-          ${renderStandaloneSelectField("Transit", "transitMode", transitOptions)}
+
+        <div class="step-progress" aria-label="Requirement check progress">
+          ${steps
+            .map(
+              (label, index) => `
+                <div class="step-marker ${index + 1 === standaloneRequirementsStep ? "active" : ""} ${
+                  index + 1 < standaloneRequirementsStep ? "complete" : ""
+                }">
+                  <span>${index + 1 < standaloneRequirementsStep ? '<i data-lucide="check"></i>' : index + 1}</span>
+                  <b>${escapeHtml(label)}</b>
+                </div>
+              `
+            )
+            .join("")}
         </div>
+
+        <div class="requirements-form guided-fields">
+          ${stepFields[standaloneRequirementsStep - 1]}
+        </div>
+        <div id="standaloneStepNotice" class="step-notice" role="status"></div>
         <div class="requirement-actions">
-          <button class="primary" id="standalonePrepareRequirementsBtn" type="button">Prepare query</button>
-          <button class="secondary" id="standaloneCopyRequirementsBtn" type="button">Copy query JSON</button>
+          ${
+            standaloneRequirementsStep > 1
+              ? '<button class="secondary" id="standalonePreviousStepBtn" type="button"><i data-lucide="arrow-left" aria-hidden="true"></i> Back</button>'
+              : ""
+          }
+          <button class="primary" id="standaloneNextStepBtn" type="button">
+            ${standaloneRequirementsStep === 3 ? '<i data-lucide="search-check" aria-hidden="true"></i> Check my trip' : 'Continue <i data-lucide="arrow-right" aria-hidden="true"></i>'}
+          </button>
         </div>
       </section>
       <aside class="tool-card">
         <div class="tool-card-head">
-          <div>
-            <h2>Result packet</h2>
-            <p>Use this payload for TravelDoc/IATA or a backend provider.</p>
+          <div class="heading-with-icon">
+            <span class="section-icon icon-amber" aria-hidden="true"><i data-lucide="list-checks"></i></span>
+            <div>
+              <h2>Your travel checklist</h2>
+              <p>Your answers and official destination sources, kept in one place.</p>
+            </div>
           </div>
           <span id="standaloneRequirementsStatus" class="provider-badge">Draft</span>
         </div>
         <div id="standaloneRequirementsPreview" class="requirements-preview"></div>
         <div class="official-source-list">
-          <h3>Official sources</h3>
+          <h3><i data-lucide="landmark" aria-hidden="true"></i> Official sources</h3>
           <div id="standaloneRequirementSources"></div>
         </div>
+        <details class="advanced-details">
+          <summary><span><i data-lucide="braces" aria-hidden="true"></i> Advanced details</span></summary>
+          <p>Technical data for a licensed travel-requirements provider.</p>
+          <button class="secondary compact-button" id="standaloneCopyRequirementsBtn" type="button">
+            <i data-lucide="copy" aria-hidden="true"></i> Copy details
+          </button>
+          <pre id="standaloneQueryJson" class="query-json"></pre>
+        </details>
       </aside>
     </div>
   `;
@@ -513,22 +623,54 @@ function bindStandaloneRequirements() {
     }
     field.addEventListener("input", () => {
       standaloneRequirementsState[field.dataset.standaloneReqField] = field.value;
+      field.removeAttribute("aria-invalid");
+      field.closest(".field")?.classList.remove("field-error");
       updateStandaloneRequirementsPreview();
     });
     field.addEventListener("change", () => {
-      standaloneRequirementsState[field.dataset.standaloneReqField] = field.value;
+      const key = field.dataset.standaloneReqField;
+      standaloneRequirementsState[key] = field.value;
+      if (key === "nationality" && !standaloneRequirementsState.passportCountry) {
+        standaloneRequirementsState.passportCountry = field.value;
+        const passportField = standaloneToolPanel.querySelector('[data-standalone-req-field="passportCountry"]');
+        if (passportField) passportField.value = field.value;
+      }
+      field.removeAttribute("aria-invalid");
+      field.closest(".field")?.classList.remove("field-error");
       updateStandaloneRequirementsPreview();
     });
   });
 
-  standaloneToolPanel.querySelector("#standalonePrepareRequirementsBtn")?.addEventListener("click", () => {
+  standaloneToolPanel.querySelector("#standalonePreviousStepBtn")?.addEventListener("click", () => {
+    standaloneRequirementsStep = Math.max(1, standaloneRequirementsStep - 1);
+    renderStandaloneTool("requirements");
+  });
+  standaloneToolPanel.querySelector("#standaloneNextStepBtn")?.addEventListener("click", () => {
+    const missing = missingStandaloneStepFields(standaloneRequirementsStep);
+    const notice = standaloneToolPanel.querySelector("#standaloneStepNotice");
+    if (missing.length) {
+      if (notice) notice.textContent = `Please complete: ${missing.map((item) => item.label).join(", ")}.`;
+      missing.forEach((item) => {
+        const field = standaloneToolPanel.querySelector(`[data-standalone-req-field="${item.key}"]`);
+        field?.setAttribute("aria-invalid", "true");
+        field?.closest(".field")?.classList.add("field-error");
+      });
+      return;
+    }
+    if (standaloneRequirementsStep < 3) {
+      standaloneRequirementsStep += 1;
+      renderStandaloneTool("requirements");
+      return;
+    }
     updateStandaloneRequirementsPreview(true);
+    if (notice) notice.textContent = "Your details are ready. Use the official links in your checklist.";
   });
   standaloneToolPanel.querySelector("#standaloneCopyRequirementsBtn")?.addEventListener("click", async (event) => {
     await copyText(JSON.stringify(buildStandaloneRequirementsQuery(), null, 2));
     event.currentTarget.textContent = "Copied";
     window.setTimeout(() => {
-      event.currentTarget.textContent = "Copy query JSON";
+      event.currentTarget.innerHTML = '<i data-lucide="copy" aria-hidden="true"></i> Copy details';
+      refreshIcons();
     }, 1400);
   });
 
@@ -542,7 +684,11 @@ function updateStandaloneRequirementsPreview(markPrepared = false) {
   const sources = standaloneToolPanel.querySelector("#standaloneRequirementSources");
   if (!status || !preview || !sources) return;
 
-  status.textContent = payload.missing_inputs.length ? `${payload.missing_inputs.length} missing` : "Ready";
+  status.textContent = payload.missing_inputs.length
+    ? standaloneRequirementsStep < 3
+      ? "In progress"
+      : `${payload.missing_inputs.length} ${payload.missing_inputs.length === 1 ? "detail" : "details"} needed`
+    : "Ready";
   status.classList.toggle("provider-ready", payload.missing_inputs.length === 0);
   preview.innerHTML = `
     <div class="query-grid">
@@ -556,14 +702,18 @@ function updateStandaloneRequirementsPreview(markPrepared = false) {
     <div class="${payload.missing_inputs.length ? "result-waiting" : "result-ready"}">
       ${escapeHtml(
         payload.missing_inputs.length
-          ? `Missing: ${payload.missing_inputs.join(", ")}`
+          ? standaloneRequirementsStep < 3
+            ? `Complete step ${standaloneRequirementsStep} of 3 to build your travel checklist.`
+            : `Still needed: ${payload.missing_inputs.join(", ")}`
           : markPrepared
-            ? "Ready to send to a licensed provider backend."
-            : "Ready."
+            ? "Your details are ready. Continue with the official sources below."
+            : "All required details are complete."
       )}
     </div>
-    <pre class="query-json">${escapeHtml(JSON.stringify(payload, null, 2))}</pre>
   `;
+
+  const queryJson = standaloneToolPanel.querySelector("#standaloneQueryJson");
+  if (queryJson) queryJson.textContent = JSON.stringify(payload, null, 2);
 
   const officialSources = [
     ...buildRequirementSourcesForCountry(payload.route.destination_country),
@@ -573,6 +723,27 @@ function updateStandaloneRequirementsPreview(markPrepared = false) {
   sources.innerHTML = uniqueSources.length
     ? uniqueSources.map(renderRequirementSource).join("")
     : `<div class="requirement-note">Choose a destination to show official government sources.</div>`;
+  refreshIcons();
+}
+
+function missingStandaloneStepFields(step) {
+  const fieldsByStep = {
+    1: [
+      ["originCountry", "departure country"],
+      ["destinationCountry", "destination country"],
+      ["travelDate", "travel date"],
+    ],
+    2: [
+      ["nationality", "nationality"],
+      ["passportCountry", "passport issuing country"],
+      ["passportType", "passport type"],
+      ["passportExpiry", "passport expiry"],
+    ],
+    3: [["stayLengthDays", "stay length"]],
+  };
+  return (fieldsByStep[step] || [])
+    .filter(([key]) => !standaloneFieldValue(key))
+    .map(([key, label]) => ({ key, label }));
 }
 
 function buildStandaloneRequirementsQuery() {
@@ -607,8 +778,11 @@ function renderVisaTool() {
     .map(([countryCode, sources]) => {
       const checked = visaSelectionState.has(countryCode) ? " checked" : "";
       return `
-        <label class="destination-check">
+        <label class="destination-check" data-visa-option data-country-name="${escapeHtml(
+          labelForCountry(countryCode) || countryCode
+        )}">
           <input type="checkbox" data-visa-country="${escapeHtml(countryCode)}"${checked}>
+          <span class="mini-icon" aria-hidden="true"><i data-lucide="map-pin"></i></span>
           <span>
             <b>${escapeHtml(labelForCountry(countryCode) || countryCode)}</b>
             <small>${escapeHtml(sources[0]?.label || "Official visa site")}</small>
@@ -622,21 +796,31 @@ function renderVisaTool() {
     <div class="tool-layout">
       <section class="tool-card">
         <div class="tool-card-head">
-          <div>
-            <div class="summary-label">Issue visa</div>
-            <h2>Official visa sites</h2>
-            <p>Select 1 to 5 destinations. The result shows government or official authority links only.</p>
+          <div class="heading-with-icon">
+            <span class="section-icon icon-amber" aria-hidden="true"><i data-lucide="badge-check"></i></span>
+            <div>
+              <div class="summary-label">Official sources only</div>
+              <h2>Where are you going?</h2>
+              <p>Select 1 to 5 destinations. We will show the relevant government or official authority sites.</p>
+            </div>
           </div>
           <span id="visaSelectionCount" class="provider-badge">1 selected</span>
         </div>
+        <label class="search-field" for="visaCountrySearch">
+          <i data-lucide="search" aria-hidden="true"></i>
+          <input id="visaCountrySearch" type="search" aria-label="Search destinations" placeholder="Search destinations" autocomplete="off">
+        </label>
         <div class="destination-check-grid">${options}</div>
         <div id="visaLimitNotice" class="requirement-note">Select between 1 and 5 destinations.</div>
       </section>
       <aside class="tool-card">
         <div class="tool-card-head">
-          <div>
-            <h2>Official links</h2>
-            <p>Open the destination authority site. Visa eligibility still depends on traveler details.</p>
+          <div class="heading-with-icon">
+            <span class="section-icon icon-blue" aria-hidden="true"><i data-lucide="landmark"></i></span>
+            <div>
+              <h2>Official visa links</h2>
+              <p>Eligibility depends on your passport and trip details. Each link opens the authority website.</p>
+            </div>
           </div>
         </div>
         <div id="visaSourceResults" class="official-source-list"></div>
@@ -646,6 +830,12 @@ function renderVisaTool() {
 }
 
 function bindVisaTool() {
+  standaloneToolPanel.querySelector("#visaCountrySearch")?.addEventListener("input", (event) => {
+    const query = event.currentTarget.value.trim().toLowerCase();
+    standaloneToolPanel.querySelectorAll("[data-visa-option]").forEach((option) => {
+      option.classList.toggle("hidden", !option.dataset.countryName.toLowerCase().includes(query));
+    });
+  });
   standaloneToolPanel.querySelectorAll("[data-visa-country]").forEach((checkbox) => {
     checkbox.addEventListener("change", () => {
       const countryCode = checkbox.dataset.visaCountry;
@@ -685,12 +875,16 @@ function renderVisaResults() {
       (source) => `
         <article class="requirement-card visa-source-card">
           <div class="summary-label">${escapeHtml(source.countryName)}</div>
-          <a href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(source.label)}</a>
+          <a class="official-link-button" href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer">
+            <span>${escapeHtml(source.label)}</span>
+            <i data-lucide="external-link" aria-hidden="true"></i>
+          </a>
           <div class="requirement-note">${escapeHtml(source.note)}</div>
         </article>
       `
     )
     .join("");
+  refreshIcons();
 }
 
 function showVisaLimitNotice(message) {
@@ -710,10 +904,13 @@ function renderDestinationInfoTool() {
   return `
     <section class="tool-card destination-tool-card">
       <div class="tool-card-head">
-        <div>
-          <div class="summary-label">Destination info</div>
-          <h2>Choose a city or country</h2>
-          <p>Live weather and currency, plus official warning and event channels.</p>
+        <div class="heading-with-icon">
+          <span class="section-icon icon-coral" aria-hidden="true"><i data-lucide="map-pinned"></i></span>
+          <div>
+            <div class="summary-label">Destination at a glance</div>
+            <h2>Choose a city or country</h2>
+            <p>See live weather and currency, plus official advisory and event channels.</p>
+          </div>
         </div>
         <label class="field destination-picker">
           <span>Destination</span>
@@ -740,6 +937,7 @@ function renderStandaloneDestinationResult() {
   const profile = buildDestinationProfileFromKey(standaloneDestinationKey);
   result.innerHTML = renderDestinationProfile(profile, "standalone");
   loadDestinationPanels(profile, "standalone");
+  refreshIcons();
 }
 
 function parseTicket(rawText) {
@@ -755,7 +953,9 @@ function parseTicket(rawText) {
       /passenger\s*[:\-]\s*([A-Za-z][A-Za-z\s'.-]{1,80}?)(?:\s*\(|\s+(?:LY|EK|Ticket|Booking|Date|Issuing)\b|$)/i,
     ])
   );
-  const flightMatch = rawText.match(/\b([A-Z]{2,3})\s?(\d{2,4})\b/);
+  const flightMatch = [...rawText.matchAll(/\b([A-Z]{2,3})\s?(\d{2,4})\b/g)].find(
+    (match) => match[0].replace(/\s+/g, "").toUpperCase() !== pnr.toUpperCase()
+  );
   const routeMatch = rawText.match(/\b([A-Z]{3})\s*[-/]\s*([A-Z]{3})\b/);
   const routeFromText = routeMatch ? [routeMatch[1], routeMatch[2]] : guessRoute(rawText);
   const dateTimes = parseDateTimes(rawText, flightMatch ? flightMatch[0] : "");
@@ -814,6 +1014,7 @@ async function extractUploadedFile(file) {
     }
 
     setStatus(`Extracted ${ticketText.value.length.toLocaleString()} characters. Ready to analyze.`, 100, true);
+    if (textReview) textReview.open = false;
   } catch (error) {
     ticketText.value = "";
     setStatus(error.message || "Could not extract this file.", 100, true, true);
@@ -1047,10 +1248,10 @@ function enrichSegment(segment) {
 function renderTrip(trip) {
   emptyState.classList.add("hidden");
   results.classList.remove("hidden");
-  resultNotice.textContent =
+  resultNotice.innerHTML =
     currentSourceType === "browser_image_ocr" || currentSourceType === "browser_pdf"
-      ? "Extracted in the browser, then parsed locally. Review OCR text before travel use."
-      : "Running in the browser with the local parser.";
+      ? '<i data-lucide="scan-search" aria-hidden="true"></i><span>Ticket scanned in this browser. Please check the detected details before travel.</span>'
+      : '<i data-lucide="shield-check" aria-hidden="true"></i><span>Ticket text analyzed in this browser. Please confirm the important details.</span>';
 
   const segment = trip.segments[0] || {};
   const passenger = trip.passengers[0]?.full_name || "-";
@@ -1060,16 +1261,18 @@ function renderTrip(trip) {
   const firstPnr = segment.pnr || "-";
 
   summaryGrid.innerHTML = [
-    ["Route", route, "summary-tile route-tile"],
-    ["Passenger", passenger, "summary-tile"],
-    ["First flight", flight, "summary-tile"],
-    ["Departure", firstDeparture, "summary-tile attention-tile"],
-    ["PNR", firstPnr, "summary-tile"],
+    ["Route", route, "summary-tile route-tile", "route"],
+    ["Passenger", passenger, "summary-tile", "user-round"],
+    ["First flight", flight, "summary-tile", "plane"],
+    ["Departure", firstDeparture, "summary-tile attention-tile", "clock-3"],
+    ["Booking reference", firstPnr, "summary-tile", "ticket-check"],
   ]
     .map(
-      ([label, value, className]) => `
+      ([label, value, className, icon]) => `
         <article class="${className}">
-          <div class="summary-label">${escapeHtml(label)}</div>
+          <div class="summary-heading"><div class="summary-label">${escapeHtml(label)}</div><i data-lucide="${escapeHtml(
+            icon
+          )}" aria-hidden="true"></i></div>
           <div class="summary-value">${escapeHtml(value)}</div>
         </article>
       `
@@ -1084,6 +1287,7 @@ function renderTrip(trip) {
   bindRequirementComponents(trip);
   tableTab.innerHTML = renderTable(trip);
   jsonOutput.textContent = JSON.stringify(trip, null, 2);
+  refreshIcons();
 }
 
 function renderImportantPanel(trip) {
@@ -1100,6 +1304,7 @@ function renderImportantPanel(trip) {
     <div class="priority-heading">
       <span class="priority-kicker">Important</span>
       <strong>${escapeHtml(firstSegment.pnr || "Review ticket details")}</strong>
+      <span class="priority-caption">Booking reference</span>
     </div>
     <div class="priority-facts">
       ${facts
@@ -1143,7 +1348,7 @@ function renderSegment(segment, index) {
       <div class="detail-grid">
         ${renderDetail("Departure", segment.departure_datetime_local || "-")}
         ${renderDetail("Arrival", segment.arrival_datetime_local || "-")}
-        ${renderDetail("PNR", segment.pnr || "-")}
+        ${renderDetail("Booking reference", segment.pnr || "-")}
         ${renderDetail("Baggage", segment.baggage_allowance || "-")}
         ${renderDetail("Class", segment.booking_class || "-")}
         ${renderDetail("Ticket", segment.ticket_number || "-")}
@@ -1171,12 +1376,15 @@ function renderDestinationProfile(profile, panelPrefix = "") {
   return `
     <div class="destination-briefing">
       <article class="destination-hero">
-        <div>
-          <div class="summary-label">Destination briefing</div>
-          <h3>${escapeHtml(profile.city || profile.airport || "Destination")}</h3>
-          <p>${escapeHtml(profile.country || "Country pending")} / ${escapeHtml(profile.airport || "-")} / ${escapeHtml(
-            profile.timezone || "timezone pending"
-          )}</p>
+        <div class="heading-with-icon destination-title">
+          <span class="section-icon icon-coral" aria-hidden="true"><i data-lucide="map-pin"></i></span>
+          <div>
+            <div class="summary-label">Destination at a glance</div>
+            <h3>${escapeHtml(profile.city || profile.airport || "Destination")}</h3>
+            <p>${escapeHtml(profile.country || "Country pending")} / ${escapeHtml(profile.airport || "-")} / ${escapeHtml(
+              profile.timezone || "timezone pending"
+            )}</p>
+          </div>
         </div>
         <div class="destination-badges">
           <span>${escapeHtml(profile.currency || "Currency")}</span>
@@ -1185,22 +1393,28 @@ function renderDestinationProfile(profile, panelPrefix = "") {
       </article>
 
       <div class="destination-grid">
-        <article class="destination-card">
+        <article class="destination-card weather-card">
           <div class="destination-card-head">
-            <div>
-              <h3>Weather</h3>
-              <p>Forecast near the arrival city or airport.</p>
+            <div class="heading-with-icon compact-heading">
+              <span class="section-icon icon-sky" aria-hidden="true"><i data-lucide="cloud-sun"></i></span>
+              <div>
+                <h3>Weather</h3>
+                <p>Forecast near the arrival city or airport.</p>
+              </div>
             </div>
             <span class="provider-badge">Open-Meteo</span>
           </div>
           <div id="${escapeHtml(weatherPanelId)}" class="live-panel">${renderLoading("Loading weather...")}</div>
         </article>
 
-        <article class="destination-card">
+        <article class="destination-card currency-card">
           <div class="destination-card-head">
-            <div>
-              <h3>Currency</h3>
-              <p>Simple reference rate for arrival currency.</p>
+            <div class="heading-with-icon compact-heading">
+              <span class="section-icon icon-green" aria-hidden="true"><i data-lucide="circle-dollar-sign"></i></span>
+              <div>
+                <h3>Currency</h3>
+                <p>Simple reference rate for arrival currency.</p>
+              </div>
             </div>
             <span class="provider-badge">${escapeHtml(profile.currency || "Currency")}</span>
           </div>
@@ -1209,9 +1423,12 @@ function renderDestinationProfile(profile, panelPrefix = "") {
 
         <article class="destination-card warning-card">
           <div class="destination-card-head">
-            <div>
-              <h3>Warnings</h3>
-              <p>Security, disaster, and weather-warning channels.</p>
+            <div class="heading-with-icon compact-heading">
+              <span class="section-icon icon-amber" aria-hidden="true"><i data-lucide="triangle-alert"></i></span>
+              <div>
+                <h3>Official advisories</h3>
+                <p>Security, disaster, health, and weather-warning channels.</p>
+              </div>
             </div>
             <span class="provider-badge">Official links</span>
           </div>
@@ -1220,11 +1437,14 @@ function renderDestinationProfile(profile, panelPrefix = "") {
           </div>
         </article>
 
-        <article class="destination-card">
+        <article class="destination-card events-card">
           <div class="destination-card-head">
-            <div>
-              <h3>Upcoming events</h3>
-              <p>Official tourism and city event calendars.</p>
+            <div class="heading-with-icon compact-heading">
+              <span class="section-icon icon-purple" aria-hidden="true"><i data-lucide="calendar-days"></i></span>
+              <div>
+                <h3>Events and local guides</h3>
+                <p>Official tourism and city event calendars.</p>
+              </div>
             </div>
             <span class="provider-badge">Calendar links</span>
           </div>
@@ -1269,6 +1489,7 @@ async function loadWeatherPanel(profile, panelId = "weatherPanel") {
     if (!response.ok) throw new Error(`Weather request failed (${response.status})`);
     const data = await response.json();
     panel.innerHTML = renderWeatherData(data);
+    refreshIcons();
   } catch (error) {
     panel.innerHTML = renderPanelError(error.message || "Could not load weather.");
   }
@@ -1287,6 +1508,7 @@ async function loadCurrencyPanel(profile, panelId = "currencyPanel") {
     if (!response.ok) throw new Error(`Currency request failed (${response.status})`);
     const data = await response.json();
     panel.innerHTML = renderCurrencyData({ base: "USD", target: profile.currency, rate: data.rates?.[profile.currency], date: data.date });
+    refreshIcons();
   } catch (error) {
     panel.innerHTML = renderPanelError(error.message || "Could not load currency.");
   }
@@ -1303,15 +1525,21 @@ function renderWeatherData(data) {
   };
   return `
     <div class="weather-current">
-      <div>
-        <span>Now</span>
-        <b>${escapeHtml(formatTemperature(current.temperature_2m))}</b>
-        <small>${escapeHtml(weatherCodeLabel(today.code))}</small>
+      <div class="weather-primary">
+        <span class="weather-symbol" aria-hidden="true"><i data-lucide="${escapeHtml(weatherIconName(today.code))}"></i></span>
+        <div>
+          <span>Now</span>
+          <b>${escapeHtml(formatTemperature(current.temperature_2m))}</b>
+          <small>${escapeHtml(weatherCodeLabel(today.code))}</small>
+        </div>
       </div>
-      <div>
-        <span>Wind</span>
-        <b>${escapeHtml(formatSpeed(current.wind_speed_10m))}</b>
-        <small>${escapeHtml(formatHumidity(current.relative_humidity_2m))}</small>
+      <div class="weather-secondary">
+        <span class="weather-symbol wind-symbol" aria-hidden="true"><i data-lucide="wind"></i></span>
+        <div>
+          <span>Wind and humidity</span>
+          <b>${escapeHtml(formatSpeed(current.wind_speed_10m))}</b>
+          <small>${escapeHtml(formatHumidity(current.relative_humidity_2m))}</small>
+        </div>
       </div>
     </div>
     <div class="forecast-row">
@@ -1320,6 +1548,7 @@ function renderWeatherData(data) {
           (day, index) => `
             <div>
               <span>${escapeHtml(shortDate(day))}</span>
+              <i class="forecast-icon" data-lucide="${escapeHtml(weatherIconName(daily.weather_code?.[index]))}" aria-hidden="true"></i>
               <b>${escapeHtml(formatTemperatureRange(daily.temperature_2m_min?.[index], daily.temperature_2m_max?.[index]))}</b>
               <small>${escapeHtml(formatRain(daily.precipitation_probability_max?.[index]))}</small>
             </div>
@@ -1550,14 +1779,14 @@ function renderDestinationLink(source) {
   }
   return `
     <a class="destination-link" href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer">
-      <b>${escapeHtml(source.label)}</b>
+      <b>${escapeHtml(source.label)} <i data-lucide="external-link" aria-hidden="true"></i></b>
       <span>${escapeHtml(source.note)}</span>
     </a>
   `;
 }
 
 function renderLoading(message) {
-  return `<div class="panel-loading">${escapeHtml(message)}</div>`;
+  return `<div class="panel-loading"><i data-lucide="loader-circle" aria-hidden="true"></i>${escapeHtml(message)}</div>`;
 }
 
 function renderPanelError(message) {
@@ -1604,6 +1833,18 @@ function weatherCodeLabel(code) {
     99: "Thunderstorm with hail",
   };
   return labels[code] || "Forecast";
+}
+
+function weatherIconName(code) {
+  if (code === 0) return "sun";
+  if ([1, 2].includes(code)) return "cloud-sun";
+  if (code === 3) return "cloud";
+  if ([45, 48].includes(code)) return "cloud-fog";
+  if ([51, 53, 55].includes(code)) return "cloud-drizzle";
+  if ([61, 63, 65, 80, 81, 82].includes(code)) return "cloud-rain";
+  if ([71, 73, 75].includes(code)) return "snowflake";
+  if ([95, 96, 99].includes(code)) return "cloud-lightning";
+  return "cloud-sun";
 }
 
 function formatTemperature(value) {
@@ -1677,8 +1918,8 @@ function renderRequirements(trip) {
 
   return `
     <div class="notice">
-      Travel requirements depend on citizenship, passport type, residence permits, transit,
-      stay length, and current rules. The query below is ready for a licensed Railway/API backend.
+      <i data-lucide="info" aria-hidden="true"></i>
+      <span>Your ticket supplied the route and travel date. Add traveler details before checking the official sources.</span>
     </div>
     <div class="requirements-workspace">
       <section class="requirements-main" aria-label="Travel document query">
@@ -1688,14 +1929,14 @@ function renderRequirements(trip) {
             <div class="summary-value">${escapeHtml(route || "-")}</div>
             <div class="requirement-note">${escapeHtml(sources.destinationName)} / travel date ${escapeHtml(travelDate || "-")}</div>
           </div>
-          <span class="provider-badge">Provider pending</span>
+          <span class="provider-badge">From your ticket</span>
         </article>
 
         <article class="requirement-card">
           <div class="requirement-card-head">
             <div>
-              <h3>Passenger inputs</h3>
-              <p>These fields are required before TravelDoc/IATA can return a reliable answer.</p>
+              <h3>Traveler details</h3>
+              <p>Use the passport that will be carried on this trip.</p>
             </div>
           </div>
           <div class="requirements-form">
@@ -1709,26 +1950,30 @@ function renderRequirements(trip) {
             ${renderInputField("Travel date", "travelDate", "date", "", travelDate)}
           </div>
           <div class="requirement-actions">
-            <button class="primary" id="prepareRequirementsBtn" type="button">Prepare query</button>
-            <button class="secondary" id="copyRequirementsBtn" type="button">Copy query JSON</button>
+            <button class="primary" id="prepareRequirementsBtn" type="button">
+              <i data-lucide="search-check" aria-hidden="true"></i> Check my trip
+            </button>
           </div>
         </article>
 
-        <article class="requirement-card">
-          <div class="requirement-card-head">
-            <div>
-              <h3>Query packet</h3>
-              <p>Backend-ready payload for Railway, TravelDoc, or IATA Timatic AutoCheck.</p>
-            </div>
+        <details class="requirement-card advanced-details">
+          <summary>
+            <span><i data-lucide="braces" aria-hidden="true"></i> Advanced details</span>
             <span id="requirementsStatus" class="provider-badge">Draft</span>
+          </summary>
+          <p>Technical trip data for a licensed travel-requirements provider.</p>
+          <div class="requirement-actions">
+            <button class="secondary compact-button" id="copyRequirementsBtn" type="button">
+              <i data-lucide="copy" aria-hidden="true"></i> Copy details
+            </button>
           </div>
           <div id="requirementsPreview" class="requirements-preview"></div>
-        </article>
+        </details>
       </section>
 
       <aside class="requirements-side" aria-label="Travel requirement results">
         <article class="requirement-card result-card">
-          <div class="summary-label">Result status</div>
+          <div class="summary-label">Your checklist status</div>
           <div id="requirementsResult" class="result-status"></div>
         </article>
 
@@ -1775,7 +2020,8 @@ function bindRequirementComponents(trip) {
       await copyText(JSON.stringify(payload, null, 2));
       copyButton.textContent = "Copied";
       window.setTimeout(() => {
-        copyButton.textContent = "Copy query JSON";
+        copyButton.innerHTML = '<i data-lucide="copy" aria-hidden="true"></i> Copy details';
+        refreshIcons();
       }, 1400);
     });
   }
@@ -1790,7 +2036,7 @@ function updateRequirementsPreview(trip, markPrepared = false) {
   if (!status || !preview || !result) return;
 
   const missing = payload.missing_inputs;
-  status.textContent = missing.length ? `${missing.length} missing` : "Ready";
+  status.textContent = missing.length ? `${missing.length} ${missing.length === 1 ? "detail" : "details"} needed` : "Ready";
   status.classList.toggle("provider-ready", missing.length === 0);
 
   preview.innerHTML = `
@@ -1806,23 +2052,23 @@ function updateRequirementsPreview(trip, markPrepared = false) {
   `;
 
   const resultText = missing.length
-    ? `Missing: ${missing.join(", ")}`
-    : "Ready to send to a licensed provider backend.";
+    ? `Still needed: ${missing.join(", ")}`
+    : "Traveler details are complete. Continue with the official checkers below.";
   result.innerHTML = `
     <div class="${missing.length ? "result-waiting" : "result-ready"}">${escapeHtml(resultText)}</div>
     <div class="requirement-note">
       ${
         markPrepared && !missing.length
-          ? "Next step: connect Railway to TravelDoc/IATA and replace this pending card with live provider results."
-          : "Provider API is not connected in the static GitHub Pages app, so no visa decision is shown here."
+          ? "Open an official checker below to receive the current decision for this traveler."
+          : "This page organizes your details but does not make a visa or entry decision."
       }
     </div>
     <div class="provider-result-list">
-      <div><b>TravelDoc</b><span>Awaiting licensed API/proxy</span></div>
-      <div><b>IATA Timatic</b><span>Awaiting API credentials</span></div>
-      <div><b>Government sources</b><span>Open official links below</span></div>
+      <div><b>Traveler details</b><span>${missing.length ? "Needs attention" : "Complete"}</span></div>
+      <div><b>Official decision</b><span>Continue to an official checker</span></div>
     </div>
   `;
+  refreshIcons();
 }
 
 function buildRequirementsQuery(trip) {
@@ -1982,7 +2228,10 @@ async function copyText(text) {
 function renderRequirementSource(source) {
   return `
     <article class="requirement-card">
-      <a href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(source.label)}</a>
+      <a class="official-link-button" href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer">
+        <span>${escapeHtml(source.label)}</span>
+        <i data-lucide="external-link" aria-hidden="true"></i>
+      </a>
       <div class="requirement-note">${escapeHtml(source.note)}</div>
     </article>
   `;
