@@ -183,9 +183,9 @@ const officialVisaSources = {
   ],
   AE: [
     {
-      label: "UAE visit visas",
-      url: "https://u.ae/en/information-and-services/visa-and-emirates-id/visit-visas",
-      note: "Official UAE government visit visa guidance.",
+      label: "UAE visas and Emirates ID",
+      url: "https://u.ae/en/information-and-services/visa-and-emirates-id",
+      note: "Official UAE government guidance for visas, entry permits, residency, and Emirates ID.",
     },
   ],
   TH: [
