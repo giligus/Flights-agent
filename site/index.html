@@ -16,9 +16,15 @@
             <p class="subtitle">Your travel assistance agent</p>
           </div>
         </div>
-        <div class="trust-note">
-          <i data-lucide="shield-check" aria-hidden="true"></i>
-          <span>Official sources. Private, browser-based ticket scanning.</span>
+        <div class="topbar-actions">
+          <div class="trust-note">
+            <i data-lucide="shield-check" aria-hidden="true"></i>
+            <span>Official sources. Private, browser-based ticket scanning.</span>
+          </div>
+          <button id="languageToggle" class="language-toggle" type="button" aria-label="Switch language to Hebrew">
+            <i data-lucide="languages" aria-hidden="true"></i>
+            <span>עברית</span>
+          </button>
         </div>
       </header>
 
@@ -182,6 +188,8 @@
     </main>
 
     <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+    <script src="./travel-data.js"></script>
+    <script src="./i18n.js"></script>
     <script src="./app.js"></script>
   </body>
 </html>

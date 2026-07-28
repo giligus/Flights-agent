@@ -128,6 +128,38 @@ h2 {
   color: var(--teal);
 }
 
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+}
+
+.language-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--ink);
+  padding: 8px 12px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.language-toggle:hover {
+  border-color: rgba(15, 123, 128, 0.45);
+  color: var(--teal-dark);
+}
+
+.language-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
 .home-intro {
   max-width: 680px;
   margin: 0 auto 24px;
@@ -501,6 +533,29 @@ h2 {
 
 .destination-picker {
   min-width: 260px;
+}
+
+.directory-source-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -4px 0 18px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+  text-decoration: none;
+}
+
+.directory-source-note:hover {
+  color: var(--teal-dark);
+}
+
+.directory-source-note svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
 }
 
 .workspace {
@@ -1565,6 +1620,91 @@ button:focus {
   gap: 4px;
 }
 
+.currency-converter {
+  display: grid;
+  gap: 12px;
+}
+
+.converter-amount,
+.converter-pair label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 760;
+  text-transform: uppercase;
+}
+
+.converter-amount input,
+.converter-pair select {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--ink);
+  padding: 0 12px;
+  outline: none;
+}
+
+.converter-amount input:focus,
+.converter-pair select:focus {
+  border-color: rgba(15, 123, 128, 0.5);
+  box-shadow: 0 0 0 3px rgba(15, 123, 128, 0.1);
+}
+
+.converter-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 42px minmax(0, 1fr);
+  align-items: end;
+  gap: 10px;
+}
+
+.icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 42px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--teal-dark);
+  cursor: pointer;
+}
+
+.icon-button:hover {
+  border-color: rgba(15, 123, 128, 0.5);
+  background: var(--green-soft);
+}
+
+.icon-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.currency-conversion-result {
+  min-height: 96px;
+}
+
+.currency-attribution {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  color: var(--muted);
+  font-size: 0.73rem;
+  text-decoration: none;
+}
+
+.currency-attribution:hover {
+  color: var(--teal-dark);
+}
+
+.currency-attribution svg {
+  width: 13px;
+  height: 13px;
+}
+
 .panel-loading {
   display: flex;
   align-items: center;
@@ -1636,6 +1776,51 @@ button:focus {
   margin-top: 6px;
   color: var(--muted);
   line-height: 1.4;
+}
+
+.destination-link-category {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--purple);
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+[dir="rtl"] body {
+  direction: rtl;
+}
+
+[dir="rtl"] .service-tile,
+[dir="rtl"] .home-intro,
+[dir="rtl"] .field,
+[dir="rtl"] .text-label,
+[dir="rtl"] .destination-card,
+[dir="rtl"] .requirement-card,
+[dir="rtl"] .tool-card {
+  text-align: right;
+}
+
+[dir="rtl"] .service-arrow,
+[dir="rtl"] .flow-back svg {
+  transform: rotate(180deg);
+}
+
+[dir="rtl"] .search-field svg {
+  right: 13px;
+  left: auto;
+}
+
+[dir="rtl"] .search-field input {
+  padding: 0 42px 0 14px;
+}
+
+[dir="rtl"] .align-right {
+  text-align: left;
+}
+
+[dir="rtl"] .destination-link b svg {
+  transform: scaleX(-1);
 }
 
 .requirement-card a {
@@ -1819,6 +2004,16 @@ pre {
     flex-direction: column;
   }
 
+  .topbar-actions {
+    align-items: stretch;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .language-toggle {
+    width: fit-content;
+  }
+
   .trust-note {
     max-width: none;
   }
@@ -1893,6 +2088,10 @@ pre {
   .weather-current,
   .forecast-row {
     grid-template-columns: 1fr;
+  }
+
+  .converter-pair {
+    grid-template-columns: 1fr 42px 1fr;
   }
 
   .route-line {

@@ -1,95 +1,11 @@
-const airports = {
-  TLV: {
-    city: "Tel Aviv",
-    country: "Israel",
-    timezone: "Asia/Jerusalem",
-    lat: 32.0853,
-    lon: 34.7818,
-    currency: "ILS",
-    countryCode: "IL",
-  },
-  LCA: {
-    city: "Larnaca",
-    country: "Cyprus",
-    timezone: "Asia/Nicosia",
-    lat: 34.9003,
-    lon: 33.6232,
-    currency: "EUR",
-    countryCode: "CY",
-  },
-  LHR: {
-    city: "London",
-    country: "United Kingdom",
-    timezone: "Europe/London",
-    lat: 51.4700,
-    lon: -0.4543,
-    currency: "GBP",
-    countryCode: "GB",
-  },
-  JFK: {
-    city: "New York",
-    country: "United States",
-    timezone: "America/New_York",
-    lat: 40.6413,
-    lon: -73.7781,
-    currency: "USD",
-    countryCode: "US",
-  },
-  CDG: {
-    city: "Paris",
-    country: "France",
-    timezone: "Europe/Paris",
-    lat: 49.0097,
-    lon: 2.5479,
-    currency: "EUR",
-    countryCode: "FR",
-  },
-  FCO: {
-    city: "Rome",
-    country: "Italy",
-    timezone: "Europe/Rome",
-    lat: 41.8003,
-    lon: 12.2389,
-    currency: "EUR",
-    countryCode: "IT",
-  },
-  MXP: {
-    city: "Milan",
-    country: "Italy",
-    timezone: "Europe/Rome",
-    lat: 45.6306,
-    lon: 8.7281,
-    currency: "EUR",
-    countryCode: "IT",
-  },
-  VCE: {
-    city: "Venice",
-    country: "Italy",
-    timezone: "Europe/Rome",
-    lat: 45.5053,
-    lon: 12.3519,
-    currency: "EUR",
-    countryCode: "IT",
-  },
-  ATH: {
-    city: "Athens",
-    country: "Greece",
-    timezone: "Europe/Athens",
-    lat: 37.9364,
-    lon: 23.9445,
-    currency: "EUR",
-    countryCode: "GR",
-  },
-  DXB: {
-    city: "Dubai",
-    country: "United Arab Emirates",
-    timezone: "Asia/Dubai",
-    lat: 25.2532,
-    lon: 55.3657,
-    currency: "AED",
-    countryCode: "AE",
-  },
-};
+const {
+  airports,
+  countryDestinations,
+  cityEventSources,
+  countryTourismSources,
+  weatherSources,
+  elAlSourceUrl,
+} = window.CO_TRAVEL_DATA;
 
 const monthMap = {
   JAN: "01",
@@ -216,112 +132,28 @@ const officialVisaSources = {
   ],
 };
 const destinationDirectory = [
-  { key: "TLV", label: "Tel Aviv, Israel", type: "City", airport: "TLV" },
-  { key: "LCA", label: "Larnaca, Cyprus", type: "City", airport: "LCA" },
-  { key: "LHR", label: "London, United Kingdom", type: "City", airport: "LHR" },
-  { key: "JFK", label: "New York, United States", type: "City", airport: "JFK" },
-  { key: "CDG", label: "Paris, France", type: "City", airport: "CDG" },
-  { key: "FCO", label: "Rome, Italy", type: "City", airport: "FCO" },
-  { key: "MXP", label: "Milan, Italy", type: "City", airport: "MXP" },
-  { key: "VCE", label: "Venice, Italy", type: "City", airport: "VCE" },
-  { key: "ATH", label: "Athens, Greece", type: "City", airport: "ATH" },
-  { key: "DXB", label: "Dubai, United Arab Emirates", type: "City", airport: "DXB" },
-  {
-    key: "IL",
-    label: "Israel",
-    type: "Country",
-    city: "Jerusalem",
-    country: "Israel",
-    countryCode: "IL",
-    timezone: "Asia/Jerusalem",
-    currency: "ILS",
-    lat: 31.7683,
-    lon: 35.2137,
-  },
-  {
-    key: "CY",
-    label: "Cyprus",
-    type: "Country",
-    city: "Nicosia",
-    country: "Cyprus",
-    countryCode: "CY",
-    timezone: "Asia/Nicosia",
-    currency: "EUR",
-    lat: 35.1856,
-    lon: 33.3823,
-  },
-  {
-    key: "IT",
-    label: "Italy",
-    type: "Country",
-    city: "Rome",
-    country: "Italy",
-    countryCode: "IT",
-    timezone: "Europe/Rome",
-    currency: "EUR",
-    lat: 41.9028,
-    lon: 12.4964,
-  },
-  {
-    key: "GB",
-    label: "United Kingdom",
-    type: "Country",
-    city: "London",
-    country: "United Kingdom",
-    countryCode: "GB",
-    timezone: "Europe/London",
-    currency: "GBP",
-    lat: 51.5072,
-    lon: -0.1276,
-  },
-  {
-    key: "AE",
-    label: "United Arab Emirates",
-    type: "Country",
-    city: "Abu Dhabi",
-    country: "United Arab Emirates",
-    countryCode: "AE",
-    timezone: "Asia/Dubai",
-    currency: "AED",
-    lat: 24.4539,
-    lon: 54.3773,
-  },
-  {
-    key: "FR",
-    label: "France",
-    type: "Country",
-    city: "Paris",
-    country: "France",
-    countryCode: "FR",
-    timezone: "Europe/Paris",
-    currency: "EUR",
-    lat: 48.8566,
-    lon: 2.3522,
-  },
-  {
-    key: "US",
-    label: "United States",
-    type: "Country",
-    city: "Washington, DC",
-    country: "United States",
-    countryCode: "US",
-    timezone: "America/New_York",
-    currency: "USD",
-    lat: 38.9072,
-    lon: -77.0369,
-  },
-  {
-    key: "TH",
-    label: "Thailand",
-    type: "Country",
-    city: "Bangkok",
-    country: "Thailand",
-    countryCode: "TH",
-    timezone: "Asia/Bangkok",
-    currency: "THB",
-    lat: 13.7563,
-    lon: 100.5018,
-  },
+  ...Object.entries(airports)
+    .map(([key, airport]) => ({
+      key,
+      label: `${airport.city}, ${airport.country}`,
+      type: "City",
+      airport: key,
+    }))
+    .sort((left, right) => left.label.localeCompare(right.label)),
+  ...countryDestinations
+    .map(([countryCode, country, city, timezone, currency, lat, lon]) => ({
+      key: `country-${countryCode}`,
+      label: country,
+      type: "Country",
+      city,
+      country,
+      countryCode,
+      timezone,
+      currency,
+      lat,
+      lon,
+    }))
+    .sort((left, right) => left.label.localeCompare(right.label)),
 ];
 const standaloneRequirementsState = {};
 const visaSelectionState = new Set(["IL"]);
@@ -361,6 +193,11 @@ const backServicesBtn = document.querySelector("#backServicesBtn");
 const flightWorkspace = document.querySelector("#flightWorkspace");
 const textReview = document.querySelector("#textReview");
 const textReviewLabel = document.querySelector("#textReviewLabel");
+const languageToggle = document.querySelector("#languageToggle");
+const translationTextSources = new WeakMap();
+const translationAttributeSources = new WeakMap();
+let currentLanguage = readSavedLanguage();
+let activeService = "";
 
 const serviceDetails = {
   scan: {
@@ -391,6 +228,9 @@ document.querySelectorAll(".service-tile").forEach((button) => {
 });
 
 backServicesBtn?.addEventListener("click", showHome);
+languageToggle?.addEventListener("click", () => {
+  setLanguage(currentLanguage === "he" ? "en" : "he");
+});
 
 document.querySelectorAll("input[name='mode']").forEach((input) => {
   input.addEventListener("change", () => {
@@ -471,9 +311,11 @@ document.querySelectorAll(".tab").forEach((button) => {
   });
 });
 
+setLanguage(currentLanguage, false);
 showHome();
 
 function showHome() {
+  activeService = "";
   homeIntro?.classList.remove("hidden");
   serviceHub?.classList.remove("hidden");
   activeFlowBar?.classList.add("hidden");
@@ -484,6 +326,7 @@ function showHome() {
 }
 
 function showService(service) {
+  activeService = service;
   const details = serviceDetails[service] || serviceDetails.scan;
   homeIntro?.classList.add("hidden");
   serviceHub?.classList.add("hidden");
@@ -503,7 +346,94 @@ function showService(service) {
 }
 
 function refreshIcons() {
+  applyTranslations(document);
   window.lucide?.createIcons();
+}
+
+function readSavedLanguage() {
+  try {
+    return localStorage.getItem("co-travel-language") === "he" ? "he" : "en";
+  } catch {
+    return "en";
+  }
+}
+
+function setLanguage(language, rerender = true) {
+  currentLanguage = language === "he" ? "he" : "en";
+  document.documentElement.lang = currentLanguage;
+  document.documentElement.dir = currentLanguage === "he" ? "rtl" : "ltr";
+  try {
+    localStorage.setItem("co-travel-language", currentLanguage);
+  } catch {
+    // Language preference remains active for the current page when storage is unavailable.
+  }
+
+  if (languageToggle) {
+    languageToggle.querySelector("span").textContent = currentLanguage === "he" ? "English" : "עברית";
+    languageToggle.setAttribute(
+      "aria-label",
+      currentLanguage === "he" ? "החלפת שפה לאנגלית" : "Switch language to Hebrew"
+    );
+  }
+
+  if (rerender && activeService && activeService !== "scan") {
+    renderStandaloneTool(activeService);
+  }
+  if (rerender && currentTrip) {
+    renderTrip(currentTrip);
+  }
+  applyTranslations(document);
+  window.lucide?.createIcons();
+}
+
+function applyTranslations(root = document) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let node = walker.nextNode();
+  while (node) {
+    if (!node.parentElement?.closest("script, style, textarea, pre, code")) {
+      if (!translationTextSources.has(node)) translationTextSources.set(node, node.nodeValue);
+      const source = translationTextSources.get(node);
+      const match = source.match(/^(\s*)(.*?)(\s*)$/s);
+      if (match?.[2]) node.nodeValue = `${match[1]}${translateUiText(match[2])}${match[3]}`;
+    }
+    node = walker.nextNode();
+  }
+
+  root.querySelectorAll?.("[placeholder], [title], [aria-label]").forEach((element) => {
+    if (!translationAttributeSources.has(element)) translationAttributeSources.set(element, {});
+    const sources = translationAttributeSources.get(element);
+    ["placeholder", "title", "aria-label"].forEach((attribute) => {
+      if (!element.hasAttribute(attribute)) return;
+      if (!(attribute in sources)) sources[attribute] = element.getAttribute(attribute);
+      element.setAttribute(attribute, translateUiText(sources[attribute]));
+    });
+  });
+}
+
+function translateUiText(source) {
+  if (currentLanguage !== "he") return source;
+  const exact = window.CO_TRAVEL_I18N?.he?.[source];
+  if (exact) return exact;
+
+  let match = source.match(/^Step (\d+) of 3$/);
+  if (match) return `שלב ${match[1]} מתוך 3`;
+  match = source.match(/^Segment (\d+)$/);
+  if (match) return `מקטע ${match[1]}`;
+  match = source.match(/^(\d+) selected$/);
+  if (match) return `${match[1]} נבחרו`;
+  match = source.match(/^(\d+) (detail|details) needed$/);
+  if (match) return `חסרים ${match[1]} פרטים`;
+  match = source.match(/^(\d+) sources$/);
+  if (match) return `${match[1]} מקורות`;
+  match = source.match(/^(\d+) links$/);
+  if (match) return `${match[1]} קישורים`;
+  match = source.match(/^Rain (\d+)%$/);
+  if (match) return `גשם ${match[1]}%`;
+  match = source.match(/^(\d+)% humidity$/);
+  if (match) return `${match[1]}% לחות`;
+  match = source.match(/^Rate date: (.+)$/);
+  if (match) return `תאריך השער: ${match[1]}`;
+  return source;
 }
 
 function renderStandaloneTool(service) {
@@ -893,14 +823,16 @@ function showVisaLimitNotice(message) {
 }
 
 function renderDestinationInfoTool() {
-  const options = destinationDirectory
-    .map(
-      (destination) =>
-        `<option value="${escapeHtml(destination.key)}"${destination.key === standaloneDestinationKey ? " selected" : ""}>${escapeHtml(
-          `${destination.label} (${destination.type})`
-        )}</option>`
-    )
-    .join("");
+  const renderOptions = (type) =>
+    destinationDirectory
+      .filter((destination) => destination.type === type)
+      .map(
+        (destination) =>
+          `<option value="${escapeHtml(destination.key)}"${destination.key === standaloneDestinationKey ? " selected" : ""}>${escapeHtml(
+            localizedDestinationLabel(destination)
+          )}</option>`
+      )
+      .join("");
   return `
     <section class="tool-card destination-tool-card">
       <div class="tool-card-head">
@@ -914,12 +846,35 @@ function renderDestinationInfoTool() {
         </div>
         <label class="field destination-picker">
           <span>Destination</span>
-          <select id="standaloneDestinationSelect">${options}</select>
+          <select id="standaloneDestinationSelect">
+            <optgroup label="${escapeHtml(translateUiText("EL AL destinations"))}">
+              ${renderOptions("City")}
+            </optgroup>
+            <optgroup label="${escapeHtml(translateUiText("Countries"))}">
+              ${renderOptions("Country")}
+            </optgroup>
+          </select>
         </label>
       </div>
+      <a class="directory-source-note" href="${escapeHtml(elAlSourceUrl)}" target="_blank" rel="noopener noreferrer">
+        <i data-lucide="plane" aria-hidden="true"></i>
+        <span>Based on EL AL's official destination directory. Routes and seasonal availability can change.</span>
+        <i data-lucide="external-link" aria-hidden="true"></i>
+      </a>
       <div id="standaloneDestinationResult"></div>
     </section>
   `;
+}
+
+function localizedDestinationLabel(destination) {
+  if (currentLanguage !== "he") return `${destination.label} (${destination.type})`;
+  const airport = destination.airport ? airports[destination.airport] : null;
+  const city = airport?.city || destination.city || "";
+  const country = airport?.country || destination.country || destination.label;
+  const translatedCity = translateUiText(city);
+  const translatedCountry = translateUiText(country);
+  const label = destination.type === "City" ? `${translatedCity}, ${translatedCountry}` : translatedCountry;
+  return `${label} (${translateUiText(destination.type)})`;
 }
 
 function bindDestinationInfoTool() {
@@ -1381,7 +1336,7 @@ function renderDestinationProfile(profile, panelPrefix = "") {
           <div>
             <div class="summary-label">Destination at a glance</div>
             <h3>${escapeHtml(profile.city || profile.airport || "Destination")}</h3>
-            <p>${escapeHtml(profile.country || "Country pending")} / ${escapeHtml(profile.airport || "-")} / ${escapeHtml(
+            <p>${escapeHtml(translateUiText(profile.country || "Country pending"))} / ${escapeHtml(profile.airport || "-")} / ${escapeHtml(
               profile.timezone || "timezone pending"
             )}</p>
           </div>
@@ -1412,13 +1367,16 @@ function renderDestinationProfile(profile, panelPrefix = "") {
             <div class="heading-with-icon compact-heading">
               <span class="section-icon icon-green" aria-hidden="true"><i data-lucide="circle-dollar-sign"></i></span>
               <div>
-                <h3>Currency</h3>
-                <p>A current reference exchange rate for the destination currency.</p>
+                <h3>Currency converter</h3>
+                <p>Convert an amount using daily reference exchange rates.</p>
               </div>
             </div>
             <span class="provider-badge">${escapeHtml(profile.currency || "Currency")}</span>
           </div>
-          <div id="${escapeHtml(currencyPanelId)}" class="live-panel">${renderLoading("Loading currency...")}</div>
+          <div id="${escapeHtml(currencyPanelId)}" class="live-panel">${renderCurrencyConverterShell(
+            profile.currency,
+            currencyPanelId
+          )}</div>
         </article>
 
         <article class="destination-card warning-card">
@@ -1426,11 +1384,11 @@ function renderDestinationProfile(profile, panelPrefix = "") {
             <div class="heading-with-icon compact-heading">
               <span class="section-icon icon-amber" aria-hidden="true"><i data-lucide="triangle-alert"></i></span>
               <div>
-                <h3>Official advisories</h3>
-                <p>Official security, health, disaster, and weather advisory sources.</p>
+                <h3>Travel advisories</h3>
+                <p>Two official sources: security guidance and local weather alerts.</p>
               </div>
             </div>
-            <span class="provider-badge">Official links</span>
+            <span class="provider-badge">${profile.warningLinks.length} sources</span>
           </div>
           <div class="warning-list">
             ${profile.warningLinks.map(renderDestinationLink).join("")}
@@ -1443,10 +1401,10 @@ function renderDestinationProfile(profile, panelPrefix = "") {
               <span class="section-icon icon-purple" aria-hidden="true"><i data-lucide="calendar-days"></i></span>
               <div>
                 <h3>Events and local guides</h3>
-                <p>Official tourism resources and local event calendars.</p>
+                <p>A city calendar and an official national tourism guide.</p>
               </div>
             </div>
-            <span class="provider-badge">Calendar links</span>
+            <span class="provider-badge">${profile.eventLinks.length} links</span>
           </div>
           <div class="warning-list">
             ${profile.eventLinks.map(renderDestinationLink).join("")}
@@ -1495,23 +1453,133 @@ async function loadWeatherPanel(profile, panelId = "weatherPanel") {
   }
 }
 
+const converterCurrencies = [
+  "ILS", "USD", "EUR", "GBP", "AED", "THB", "JPY", "CAD", "CHF", "AUD", "CNY", "HKD", "INR", "KRW",
+  "PLN", "CZK", "HUF", "RON", "BGN", "DKK", "TRY", "GEL", "MAD", "ZAR", "ARS", "RSD", "MDL", "ALL",
+  "EGP", "VND", "UAH", "RUB",
+];
+const exchangeRateCache = new Map();
+
+function renderCurrencyConverterShell(destinationCurrency, panelId) {
+  const target = destinationCurrency || "USD";
+  const base = target === "ILS" ? "USD" : "ILS";
+  const currencies = [...new Set([...converterCurrencies, base, target])];
+  const renderOptions = (selected) =>
+    currencies
+      .map(
+        (currency) =>
+          `<option value="${escapeHtml(currency)}"${currency === selected ? " selected" : ""}>${escapeHtml(currency)}</option>`
+      )
+      .join("");
+  return `
+    <div class="currency-converter" data-currency-converter="${escapeHtml(panelId)}">
+      <label class="converter-amount">
+        <span>Amount</span>
+        <input type="number" min="0" step="0.01" value="100" data-currency-amount inputmode="decimal">
+      </label>
+      <div class="converter-pair">
+        <label>
+          <span>From currency</span>
+          <select data-currency-base>${renderOptions(base)}</select>
+        </label>
+        <button class="icon-button converter-swap" type="button" data-currency-swap aria-label="Swap currencies" title="Swap currencies">
+          <i data-lucide="arrow-left-right" aria-hidden="true"></i>
+        </button>
+        <label>
+          <span>To currency</span>
+          <select data-currency-target>${renderOptions(target)}</select>
+        </label>
+      </div>
+      <div class="currency-conversion-result" data-currency-result aria-live="polite">${renderLoading("Loading exchange rate...")}</div>
+      <a class="currency-attribution" href="https://www.exchangerate-api.com" target="_blank" rel="noopener noreferrer">
+        Rates by ExchangeRate-API
+        <i data-lucide="external-link" aria-hidden="true"></i>
+      </a>
+    </div>
+  `;
+}
+
 async function loadCurrencyPanel(profile, panelId = "currencyPanel") {
   const panel = document.querySelector(`#${panelId}`);
   if (!panel) return;
-  if (!profile.currency || profile.currency === "USD") {
-    panel.innerHTML = renderCurrencyData({ base: "USD", target: profile.currency || "USD", rate: 1 });
-    return;
+  if (!panel.querySelector("[data-currency-converter]")) {
+    panel.innerHTML = renderCurrencyConverterShell(profile.currency, panelId);
+  }
+  if (panel.dataset.converterBound === "true") return;
+  panel.dataset.converterBound = "true";
+
+  const amountInput = panel.querySelector("[data-currency-amount]");
+  const baseSelect = panel.querySelector("[data-currency-base]");
+  const targetSelect = panel.querySelector("[data-currency-target]");
+  const swapButton = panel.querySelector("[data-currency-swap]");
+  const result = panel.querySelector("[data-currency-result]");
+
+  const update = async () => {
+    const amount = Math.max(0, Number(amountInput.value) || 0);
+    const base = baseSelect.value;
+    const target = targetSelect.value;
+    if (base === target) {
+      result.innerHTML = renderCurrencyResult({ amount, base, target, rate: 1, updated: "" });
+      applyTranslations(result);
+      return;
+    }
+    result.innerHTML = renderLoading("Loading exchange rate...");
+    applyTranslations(result);
+    try {
+      const data = await getExchangeRates(base);
+      const rate = Number(data.rates?.[target]);
+      if (!rate) throw new Error("No exchange rate returned.");
+      result.innerHTML = renderCurrencyResult({
+        amount,
+        base,
+        target,
+        rate,
+        updated: data.time_last_update_utc || "",
+      });
+      applyTranslations(result);
+    } catch (error) {
+      result.innerHTML = renderPanelError(error.message || "Could not load currency.");
+      applyTranslations(result);
+    }
+  };
+
+  amountInput.addEventListener("input", update);
+  baseSelect.addEventListener("change", update);
+  targetSelect.addEventListener("change", update);
+  swapButton.addEventListener("click", () => {
+    const previousBase = baseSelect.value;
+    baseSelect.value = targetSelect.value;
+    targetSelect.value = previousBase;
+    update();
+  });
+  refreshIcons();
+  await update();
+}
+
+async function getExchangeRates(base) {
+  if (exchangeRateCache.has(base)) return exchangeRateCache.get(base);
+  const storageKey = `co-travel-rates-${base}`;
+  try {
+    const cached = JSON.parse(localStorage.getItem(storageKey) || "null");
+    if (cached?.savedAt && Date.now() - cached.savedAt < 12 * 60 * 60 * 1000 && cached.data?.rates) {
+      exchangeRateCache.set(base, cached.data);
+      return cached.data;
+    }
+  } catch {
+    // Continue to the live endpoint when cached data is unavailable.
   }
 
+  const response = await fetch(`https://open.er-api.com/v6/latest/${encodeURIComponent(base)}`);
+  if (!response.ok) throw new Error(`Currency request failed (${response.status})`);
+  const data = await response.json();
+  if (data.result !== "success" || !data.rates) throw new Error("No exchange rate returned.");
+  exchangeRateCache.set(base, data);
   try {
-    const response = await fetch(`https://api.frankfurter.dev/v1/latest?base=USD&symbols=${encodeURIComponent(profile.currency)}`);
-    if (!response.ok) throw new Error(`Currency request failed (${response.status})`);
-    const data = await response.json();
-    panel.innerHTML = renderCurrencyData({ base: "USD", target: profile.currency, rate: data.rates?.[profile.currency], date: data.date });
-    refreshIcons();
-  } catch (error) {
-    panel.innerHTML = renderPanelError(error.message || "Could not load currency.");
+    localStorage.setItem(storageKey, JSON.stringify({ savedAt: Date.now(), data }));
+  } catch {
+    // In-memory caching still prevents repeated requests during this visit.
   }
+  return data;
 }
 
 function renderWeatherData(data) {
@@ -1529,7 +1597,7 @@ function renderWeatherData(data) {
         <span class="weather-symbol" aria-hidden="true"><i data-lucide="${escapeHtml(weatherIconName(today.code))}"></i></span>
         <div>
           <span>Now</span>
-          <b>${escapeHtml(formatTemperature(current.temperature_2m))}</b>
+          <b dir="ltr">${escapeHtml(formatTemperature(current.temperature_2m))}</b>
           <small>${escapeHtml(weatherCodeLabel(today.code))}</small>
         </div>
       </div>
@@ -1537,7 +1605,7 @@ function renderWeatherData(data) {
         <span class="weather-symbol wind-symbol" aria-hidden="true"><i data-lucide="wind"></i></span>
         <div>
           <span>Wind and humidity</span>
-          <b>${escapeHtml(formatSpeed(current.wind_speed_10m))}</b>
+          <b dir="ltr">${escapeHtml(formatSpeed(current.wind_speed_10m))}</b>
           <small>${escapeHtml(formatHumidity(current.relative_humidity_2m))}</small>
         </div>
       </div>
@@ -1549,7 +1617,7 @@ function renderWeatherData(data) {
             <div>
               <span>${escapeHtml(shortDate(day))}</span>
               <i class="forecast-icon" data-lucide="${escapeHtml(weatherIconName(daily.weather_code?.[index]))}" aria-hidden="true"></i>
-              <b>${escapeHtml(formatTemperatureRange(daily.temperature_2m_min?.[index], daily.temperature_2m_max?.[index]))}</b>
+              <b dir="ltr">${escapeHtml(formatTemperatureRange(daily.temperature_2m_min?.[index], daily.temperature_2m_max?.[index]))}</b>
               <small>${escapeHtml(formatRain(daily.precipitation_probability_max?.[index]))}</small>
             </div>
           `
@@ -1559,15 +1627,19 @@ function renderWeatherData(data) {
   `;
 }
 
-function renderCurrencyData({ base, target, rate, date }) {
-  if (!rate) return renderPanelError("No exchange rate returned.");
-  const inverse = rate ? 1 / rate : 0;
+function renderCurrencyResult({ amount, base, target, rate, updated }) {
+  const converted = amount * rate;
+  const numberFormatter = new Intl.NumberFormat(currentLanguage === "he" ? "he-IL" : "en-US", {
+    maximumFractionDigits: 2,
+  });
   return `
     <div class="currency-rate">
-      <span>${escapeHtml(base)} to ${escapeHtml(target)}</span>
-      <b>1 ${escapeHtml(base)} = ${escapeHtml(rate.toFixed(3))} ${escapeHtml(target)}</b>
-      <small>${escapeHtml(inverse ? `1 ${target} = ${inverse.toFixed(3)} ${base}` : "")}</small>
-      <small>${escapeHtml(date ? `Rate date: ${date}` : "Reference rate")}</small>
+      <span dir="ltr">${escapeHtml(base)} to ${escapeHtml(target)}</span>
+      <b dir="ltr">${escapeHtml(numberFormatter.format(amount))} ${escapeHtml(base)} = ${escapeHtml(
+        numberFormatter.format(converted)
+      )} ${escapeHtml(target)}</b>
+      <small dir="ltr">1 ${escapeHtml(base)} = ${escapeHtml(rate.toFixed(rate < 0.01 ? 6 : 4))} ${escapeHtml(target)}</small>
+      <small>${escapeHtml(updated ? `Rate date: ${new Date(updated).toLocaleDateString(currentLanguage === "he" ? "he-IL" : "en-GB")}` : "Daily reference rate")}</small>
     </div>
   `;
 }
@@ -1628,150 +1700,67 @@ function buildDestinationProfileFromKey(key) {
 }
 
 function buildWarningLinks(countryCode, countryName) {
-  const stateSlug = {
-    CY: "Cyprus",
-    IL: "IsraeltheWestBankandGaza",
-    IT: "Italy",
-    GB: "UnitedKingdom",
-    AE: "UnitedArabEmirates",
-    TH: "Thailand",
-    US: "UnitedStates",
-    FR: "France",
-    DE: "Germany",
-    GR: "Greece",
-  }[countryCode];
   const links = [
     {
-      label: "U.S. travel advisory",
-      url: stateSlug
-        ? `https://travel.state.gov/content/travel/en/international-travel/International-Travel-Country-Information-Pages/${stateSlug}.html`
-        : "https://travel.state.gov/content/travel/en/international-travel.html",
-      note: countryName ? `Security and safety advisory for ${countryName}.` : "Security and safety advisories by country.",
-    },
-    {
-      label: "UK foreign travel advice",
-      url: "https://www.gov.uk/foreign-travel-advice",
-      note: "Official UK country-specific safety, entry, health, and crisis guidance.",
-    },
-    {
-      label: "GDACS disaster alerts",
-      url: "https://www.gdacs.org/",
-      note: "Global disaster alerts for earthquakes, floods, tropical cyclones, volcanoes, and related hazards.",
-    },
-    {
-      label: "WHO outbreak news",
-      url: "https://www.who.int/emergencies/disease-outbreak-news",
-      note: "Official global disease outbreak updates from the World Health Organization.",
+      label: "Official travel warning",
+      url:
+        currentLanguage === "he"
+          ? "https://www.gov.il/he/Departments/DynamicCollectors/travel-warnings-nsc"
+          : "https://www.gov.il/en/departments/dynamiccollectors/travel-warnings-nsc",
+      note: "Israel National Security Council travel warnings.",
     },
   ];
   const weatherLink = officialWeatherLink(countryCode);
   if (weatherLink) links.push(weatherLink);
-  return links;
+  return links.slice(0, 2);
 }
 
 function buildEventLinks(countryCode, city, countryName) {
-  const byCountry = {
-    CY: [
-      {
-        label: "Visit Cyprus events",
-        url: "https://www.visitcyprus.com/index.php/en/discovercyprus/events",
-        note: "Official Cyprus tourism event listings.",
-      },
-    ],
-    IL: [
-      {
-        label: "Tel Aviv events",
-        url: "https://www.visit-tel-aviv.com/",
-        note: "Official Tel Aviv visitor information and event discovery.",
-      },
-    ],
-    IT: [
-      {
-        label: "Italia.it events",
-        url: "https://www.italia.it/en/events",
-        note: "Official Italian tourism events.",
-      },
-    ],
-    GB: [
-      {
-        label: "VisitBritain events",
-        url: "https://www.visitbritain.com/en/things-to-do/events",
-        note: "Official UK visitor event inspiration.",
-      },
-    ],
-    AE: [
-      {
-        label: "Visit Dubai events",
-        url: "https://www.visitdubai.com/en/whats-on",
-        note: "Official Dubai event calendar.",
-      },
-    ],
-    TH: [
-      {
-        label: "Tourism Thailand events",
-        url: "https://www.tourismthailand.org/Events-and-Festivals",
-        note: "Official Tourism Authority of Thailand event listings.",
-      },
-    ],
-    US: [
-      {
-        label: "Visit The USA events",
-        url: "https://www.visittheusa.com/events",
-        note: "Official U.S. tourism event listings.",
-      },
-    ],
-    FR: [
-      {
-        label: "Explore France events",
-        url: "https://www.france.fr/en/events/",
-        note: "Official French tourism event listings.",
-      },
-    ],
-    GR: [
-      {
-        label: "Visit Greece events",
-        url: "https://www.visitgreece.gr/events/",
-        note: "Official Greek tourism event listings.",
-      },
-    ],
-    DE: [
-      {
-        label: "Germany tourism events",
-        url: "https://www.germany.travel/en/events/events.html",
-        note: "Official German tourism event listings.",
-      },
-    ],
-  };
-  return (
-    byCountry[countryCode] || [
-      {
-        label: `${city || countryName || "Destination"} events`,
-        url: "",
-        note: "No official event calendar is mapped yet for this destination.",
-      },
-    ]
-  );
+  const links = [];
+  const citySource = cityEventSources[city];
+  if (citySource) {
+    links.push({
+      label: citySource[0],
+      url: citySource[1],
+      note: citySource[2],
+      category: "City events",
+    });
+  }
+  const countrySource = countryTourismSources[countryCode];
+  if (countrySource) {
+    links.push({
+      label: countrySource[0],
+      url: countrySource[1],
+      note: countrySource[2],
+      category: "Official tourism guide",
+    });
+  }
+  if (!links.length) {
+    return [{
+      label: `${city || countryName || "Destination"} visitor information`,
+      url: "",
+      note: "An official event guide is not mapped for this destination yet.",
+      category: "Official tourism guide",
+    }];
+  }
+  return uniqueSourcesByUrl(links).slice(0, 2);
 }
 
 function officialWeatherLink(countryCode) {
-  const links = {
-    CY: { label: "Cyprus weather service", url: "https://www.dom.org.cy/", note: "Official Cyprus Department of Meteorology." },
-    IL: { label: "Israel weather service", url: "https://ims.gov.il/", note: "Official Israel Meteorological Service." },
-    IT: { label: "Italy weather service", url: "https://www.meteoam.it/", note: "Official Italian Air Force weather service." },
-    GB: { label: "UK Met Office warnings", url: "https://www.metoffice.gov.uk/weather/warnings-and-advice/uk-warnings", note: "Official UK weather warnings." },
-    AE: { label: "UAE weather service", url: "https://www.ncm.ae/", note: "Official UAE National Center of Meteorology." },
-    US: { label: "U.S. weather alerts", url: "https://www.weather.gov/alerts", note: "Official National Weather Service alerts." },
-    FR: { label: "France weather alerts", url: "https://vigilance.meteofrance.fr/", note: "Official Meteo-France weather warnings." },
-    GR: { label: "Greece weather service", url: "https://www.emy.gr/", note: "Official Hellenic National Meteorological Service." },
-    DE: { label: "Germany weather warnings", url: "https://www.dwd.de/EN/weather/warnings/warnings_node.html", note: "Official German Weather Service warnings." },
+  const source = weatherSources[countryCode];
+  if (!source) return null;
+  return {
+    label: "Local weather alerts",
+    url: source[1],
+    note: source[2],
   };
-  return links[countryCode] || null;
 }
 
 function renderDestinationLink(source) {
   if (!source.url) {
     return `
       <div class="destination-link destination-link-muted">
+        ${source.category ? `<small class="destination-link-category">${escapeHtml(source.category)}</small>` : ""}
         <b>${escapeHtml(source.label)}</b>
         <span>${escapeHtml(source.note)}</span>
       </div>
@@ -1779,6 +1768,7 @@ function renderDestinationLink(source) {
   }
   return `
     <a class="destination-link" href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer">
+      ${source.category ? `<small class="destination-link-category">${escapeHtml(source.category)}</small>` : ""}
       <b>${escapeHtml(source.label)} <i data-lucide="external-link" aria-hidden="true"></i></b>
       <span>${escapeHtml(source.note)}</span>
     </a>
@@ -1794,18 +1784,7 @@ function renderPanelError(message) {
 }
 
 function currencyForCountry(countryCode) {
-  return {
-    CY: "EUR",
-    IL: "ILS",
-    IT: "EUR",
-    GB: "GBP",
-    AE: "AED",
-    TH: "THB",
-    US: "USD",
-    FR: "EUR",
-    DE: "EUR",
-    GR: "EUR",
-  }[countryCode] || "";
+  return countryDestinations.find(([code]) => code === countryCode)?.[4] || "";
 }
 
 function weatherCodeLabel(code) {
@@ -1871,7 +1850,11 @@ function formatRain(value) {
 function shortDate(value) {
   if (!value) return "-";
   const date = new Date(`${value}T00:00:00`);
-  return date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+  return date.toLocaleDateString(currentLanguage === "he" ? "he-IL" : "en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
 }
 
 function renderDetail(label, value) {
