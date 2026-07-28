@@ -197,9 +197,14 @@ const officialVisaSources = {
   ],
   US: [
     {
+      label: "Official ESTA application",
+      url: "https://esta.cbp.dhs.gov/",
+      note: "Official U.S. Customs and Border Protection travel authorization for eligible Visa Waiver Program travelers. ESTA is not a visa.",
+    },
+    {
       label: "U.S. visitor visa",
       url: "https://travel.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html",
-      note: "Official U.S. Department of State visitor visa guidance.",
+      note: "Official U.S. Department of State guidance for travelers who need a visitor visa.",
     },
   ],
   FR: [
