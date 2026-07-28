@@ -365,19 +365,19 @@ const textReviewLabel = document.querySelector("#textReviewLabel");
 const serviceDetails = {
   scan: {
     title: "Scan my ticket",
-    description: "Upload a PDF or photo, then review the detected flight details.",
+    description: "Upload a PDF or image and review the flight details extracted from your ticket.",
   },
   requirements: {
     title: "Check entry requirements",
-    description: "Tell us about the trip and traveler to prepare an official-source checklist.",
+    description: "Provide a few trip and traveler details to prepare an official-source checklist.",
   },
   visa: {
     title: "Find an official visa site",
-    description: "Choose up to five destinations and continue only to government sources.",
+    description: "Select up to five destinations and access official government visa services.",
   },
   destination: {
     title: "Explore a destination",
-    description: "See practical destination information in one easy-to-scan view.",
+    description: "Review essential destination information in a clear, practical summary.",
   },
 };
 
@@ -529,17 +529,17 @@ function renderStandaloneTool(service) {
 }
 
 function renderStandaloneRequirements() {
-  const steps = ["Your trip", "Your passport", "Trip details"];
+  const steps = ["Your journey", "Your passport", "Travel details"];
   const stepFields = [
-    `${renderStandaloneSelectField("Where are you leaving from?", "originCountry", countryOptions)}
-     ${renderStandaloneSelectField("Where are you going?", "destinationCountry", countryOptions)}
-     ${renderStandaloneInputField("When do you travel?", "travelDate", "date")}`,
-    `${renderStandaloneSelectField("Your citizenship / nationality", "nationality", countryOptions)}
+    `${renderStandaloneSelectField("Departure country", "originCountry", countryOptions)}
+     ${renderStandaloneSelectField("Destination country", "destinationCountry", countryOptions)}
+     ${renderStandaloneInputField("Travel date", "travelDate", "date")}`,
+    `${renderStandaloneSelectField("Nationality", "nationality", countryOptions)}
      ${renderStandaloneSelectField("Passport issuing country", "passportCountry", countryOptions)}
      ${renderStandaloneSelectField("Passport type", "passportType", passportTypeOptions)}
-     ${renderStandaloneInputField("Passport expiry", "passportExpiry", "date")}`,
-    `${renderStandaloneInputField("How many days will you stay?", "stayLengthDays", "number", "Days")}
-     ${renderStandaloneSelectField("Will you transit on the way?", "transitMode", transitOptions)}`,
+     ${renderStandaloneInputField("Passport expiry date", "passportExpiry", "date")}`,
+    `${renderStandaloneInputField("Length of stay", "stayLengthDays", "number", "Days")}
+     ${renderStandaloneSelectField("Transit plans", "transitMode", transitOptions)}`,
   ];
 
   return `
@@ -551,7 +551,7 @@ function renderStandaloneRequirements() {
             <div>
               <div class="summary-label">Step ${standaloneRequirementsStep} of 3</div>
               <h2>${escapeHtml(steps[standaloneRequirementsStep - 1])}</h2>
-              <p>Answer a few details at a time. We will keep your progress as you continue.</p>
+              <p>Complete a few short steps. Your answers stay in place as you continue.</p>
             </div>
           </div>
           <span class="provider-badge">About 2 minutes</span>
@@ -593,7 +593,7 @@ function renderStandaloneRequirements() {
             <span class="section-icon icon-amber" aria-hidden="true"><i data-lucide="list-checks"></i></span>
             <div>
               <h2>Your travel checklist</h2>
-              <p>Your answers and official destination sources, kept in one place.</p>
+              <p>A concise summary of your answers and official destination sources.</p>
             </div>
           </div>
           <span id="standaloneRequirementsStatus" class="provider-badge">Draft</span>
@@ -605,7 +605,7 @@ function renderStandaloneRequirements() {
         </div>
         <details class="advanced-details">
           <summary><span><i data-lucide="braces" aria-hidden="true"></i> Advanced details</span></summary>
-          <p>Technical data for a licensed travel-requirements provider.</p>
+          <p>Structured trip data for a licensed travel-requirements provider.</p>
           <button class="secondary compact-button" id="standaloneCopyRequirementsBtn" type="button">
             <i data-lucide="copy" aria-hidden="true"></i> Copy details
           </button>
@@ -663,7 +663,7 @@ function bindStandaloneRequirements() {
       return;
     }
     updateStandaloneRequirementsPreview(true);
-    if (notice) notice.textContent = "Your details are ready. Use the official links in your checklist.";
+    if (notice) notice.textContent = "Your details are complete. Continue with the official sources in your checklist.";
   });
   standaloneToolPanel.querySelector("#standaloneCopyRequirementsBtn")?.addEventListener("click", async (event) => {
     await copyText(JSON.stringify(buildStandaloneRequirementsQuery(), null, 2));
@@ -703,10 +703,10 @@ function updateStandaloneRequirementsPreview(markPrepared = false) {
       ${escapeHtml(
         payload.missing_inputs.length
           ? standaloneRequirementsStep < 3
-            ? `Complete step ${standaloneRequirementsStep} of 3 to build your travel checklist.`
+            ? `Complete step ${standaloneRequirementsStep} of 3 to continue building your travel checklist.`
             : `Still needed: ${payload.missing_inputs.join(", ")}`
           : markPrepared
-            ? "Your details are ready. Continue with the official sources below."
+            ? "Your checklist is ready. Continue with the official sources below."
             : "All required details are complete."
       )}
     </div>
@@ -801,7 +801,7 @@ function renderVisaTool() {
             <div>
               <div class="summary-label">Official sources only</div>
               <h2>Where are you going?</h2>
-              <p>Select 1 to 5 destinations. We will show the relevant government or official authority sites.</p>
+              <p>Select up to five destinations to view the relevant government or official authority websites.</p>
             </div>
           </div>
           <span id="visaSelectionCount" class="provider-badge">1 selected</span>
@@ -819,7 +819,7 @@ function renderVisaTool() {
             <span class="section-icon icon-blue" aria-hidden="true"><i data-lucide="landmark"></i></span>
             <div>
               <h2>Official visa links</h2>
-              <p>Eligibility depends on your passport and trip details. Each link opens the authority website.</p>
+              <p>Eligibility depends on your passport and itinerary. Each link opens the official authority website.</p>
             </div>
           </div>
         </div>
@@ -909,7 +909,7 @@ function renderDestinationInfoTool() {
           <div>
             <div class="summary-label">Destination at a glance</div>
             <h2>Choose a city or country</h2>
-            <p>See live weather and currency, plus official advisory and event channels.</p>
+            <p>View live weather and currency information alongside official advisory and event sources.</p>
           </div>
         </div>
         <label class="field destination-picker">
@@ -1250,8 +1250,8 @@ function renderTrip(trip) {
   results.classList.remove("hidden");
   resultNotice.innerHTML =
     currentSourceType === "browser_image_ocr" || currentSourceType === "browser_pdf"
-      ? '<i data-lucide="scan-search" aria-hidden="true"></i><span>Ticket scanned in this browser. Please check the detected details before travel.</span>'
-      : '<i data-lucide="shield-check" aria-hidden="true"></i><span>Ticket text analyzed in this browser. Please confirm the important details.</span>';
+      ? '<i data-lucide="scan-search" aria-hidden="true"></i><span>Ticket scanned locally in your browser. Verify all extracted details before travel.</span>'
+      : '<i data-lucide="shield-check" aria-hidden="true"></i><span>Ticket text analyzed locally in your browser. Verify all extracted details before travel.</span>';
 
   const segment = trip.segments[0] || {};
   const passenger = trip.passengers[0]?.full_name || "-";
@@ -1399,7 +1399,7 @@ function renderDestinationProfile(profile, panelPrefix = "") {
               <span class="section-icon icon-sky" aria-hidden="true"><i data-lucide="cloud-sun"></i></span>
               <div>
                 <h3>Weather</h3>
-                <p>Forecast near the arrival city or airport.</p>
+                <p>Current conditions and a four-day forecast for the destination.</p>
               </div>
             </div>
             <span class="provider-badge">Open-Meteo</span>
@@ -1413,7 +1413,7 @@ function renderDestinationProfile(profile, panelPrefix = "") {
               <span class="section-icon icon-green" aria-hidden="true"><i data-lucide="circle-dollar-sign"></i></span>
               <div>
                 <h3>Currency</h3>
-                <p>Simple reference rate for arrival currency.</p>
+                <p>A current reference exchange rate for the destination currency.</p>
               </div>
             </div>
             <span class="provider-badge">${escapeHtml(profile.currency || "Currency")}</span>
@@ -1427,7 +1427,7 @@ function renderDestinationProfile(profile, panelPrefix = "") {
               <span class="section-icon icon-amber" aria-hidden="true"><i data-lucide="triangle-alert"></i></span>
               <div>
                 <h3>Official advisories</h3>
-                <p>Security, disaster, health, and weather-warning channels.</p>
+                <p>Official security, health, disaster, and weather advisory sources.</p>
               </div>
             </div>
             <span class="provider-badge">Official links</span>
@@ -1443,7 +1443,7 @@ function renderDestinationProfile(profile, panelPrefix = "") {
               <span class="section-icon icon-purple" aria-hidden="true"><i data-lucide="calendar-days"></i></span>
               <div>
                 <h3>Events and local guides</h3>
-                <p>Official tourism and city event calendars.</p>
+                <p>Official tourism resources and local event calendars.</p>
               </div>
             </div>
             <span class="provider-badge">Calendar links</span>
@@ -1919,7 +1919,7 @@ function renderRequirements(trip) {
   return `
     <div class="notice">
       <i data-lucide="info" aria-hidden="true"></i>
-      <span>Your ticket supplied the route and travel date. Add traveler details before checking the official sources.</span>
+      <span>Your ticket supplied the route and travel date. Add the traveler's passport details to prepare the official checks.</span>
     </div>
     <div class="requirements-workspace">
       <section class="requirements-main" aria-label="Travel document query">
@@ -1936,7 +1936,7 @@ function renderRequirements(trip) {
           <div class="requirement-card-head">
             <div>
               <h3>Traveler details</h3>
-              <p>Use the passport that will be carried on this trip.</p>
+              <p>Enter the passport details that will be used for this journey.</p>
             </div>
           </div>
           <div class="requirements-form">
@@ -2059,8 +2059,8 @@ function updateRequirementsPreview(trip, markPrepared = false) {
     <div class="requirement-note">
       ${
         markPrepared && !missing.length
-          ? "Open an official checker below to receive the current decision for this traveler."
-          : "This page organizes your details but does not make a visa or entry decision."
+          ? "Open an official checker below for the current travel-document decision."
+          : "co-travel organizes your details but does not independently issue visa or entry decisions."
       }
     </div>
     <div class="provider-result-list">
