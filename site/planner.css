@@ -585,6 +585,7 @@ body {
 .visual-athens { background: linear-gradient(150deg, #72abd1, #325e91); }
 .visual-tokyo { background: linear-gradient(150deg, #df8da0, #784b73); }
 .visual-rome { background: linear-gradient(150deg, #df9a68, #8b5d4d); }
+.visual-jerusalem { background: linear-gradient(150deg, #d9b77c, #8f6547); }
 .visual-coast { background: linear-gradient(150deg, #55b7cd, #1d7184); }
 
 .community-card-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }

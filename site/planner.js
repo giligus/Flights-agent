@@ -127,6 +127,8 @@
       back: "Back",
       continue: "Continue",
       createPlans: "Create my three plans",
+      buildingRealPlans: "Finding real places and building your plans…",
+      planningFailed: "We could not finish the destination scan. Please try again.",
       savedEyebrow: "Your travel workspace",
       savedTitle: "Saved and published trips",
       savedBody: "Plans are stored only in this browser in the current MVP.",
@@ -158,7 +160,7 @@
       eventsFilter: "Events & venues",
       addToTrip: "Add",
       addedToTrip: "Added",
-      officialGuide: "Guide",
+      officialGuide: "Official site",
       addedPlacement: "Added to Day {day} at {time}.",
       alreadyAdded: "This idea is already in the selected plan.",
       moreInfo: "More information",
@@ -379,6 +381,8 @@
       back: "חזרה",
       continue: "המשך",
       createPlans: "יצירת שלוש התוכניות שלי",
+      buildingRealPlans: "מאתרים מקומות אמיתיים ובונים את התוכניות שלכם…",
+      planningFailed: "לא הצלחנו להשלים את סריקת היעד. נסו שוב.",
       savedEyebrow: "סביבת הנסיעות שלכם",
       savedTitle: "טיולים שמורים ומפורסמים",
       savedBody: "בגרסה הנוכחית התוכניות נשמרות בדפדפן בלבד.",
@@ -410,7 +414,7 @@
       eventsFilter: "אירועים ומופעים",
       addToTrip: "הוספה",
       addedToTrip: "נוסף",
-      officialGuide: "מדריך",
+      officialGuide: "אתר רשמי",
       addedPlacement: "נוסף ליום {day} בשעה {time}.",
       alreadyAdded: "הרעיון הזה כבר נמצא בתוכנית שנבחרה.",
       moreInfo: "מידע נוסף",
@@ -697,6 +701,28 @@
         { id: "bcn-event", title: "Barcelona city event", category: "event", area: "Barcelona", bestTime: "evening", duration: 150, icon: "calendar-heart", detail: "Choose a dated item from the official city agenda.", source: "https://www.barcelona.cat/en/what-to-do-in-bcn" },
       ],
     },
+    jerusalem: {
+      name: "Jerusalem",
+      country: "Israel",
+      currency: "ILS",
+      timeZone: "UTC+3",
+      character: "ancient layers · markets · living history",
+      visual: "visual-jerusalem",
+      highlights: ["Western Wall and Jewish Quarter", "Tower of David Museum", "Israel Museum", "Mahane Yehuda Market", "City of David", "Yad Vashem", "National Library of Israel", "Bible Lands Museum", "Jerusalem Botanical Gardens", "Menachem Begin Heritage Center"],
+      events: ["Tower of David evening programme", "Jerusalem cultural performance", "Mahane Yehuda evening", "Seasonal museum event"],
+      recommendations: [
+        { id: "jer-kotel", title: "Western Wall and Jewish Quarter", category: "sight", area: "Old City", bestTime: "morning", duration: 150, icon: "landmark", detail: "Begin early in the Old City and allow time for security procedures and respectful access.", source: "https://thekotel.org/en/" },
+        { id: "jer-tower-david", title: "Tower of David Jerusalem Museum", category: "culture", area: "Jaffa Gate", bestTime: "morning", duration: 150, icon: "castle", detail: "A focused introduction to Jerusalem's history beside Jaffa Gate. Confirm current exhibitions and timed entry.", source: "https://www.tod.org.il/en/" },
+        { id: "jer-israel-museum", title: "Israel Museum", category: "culture", area: "Givat Ram", bestTime: "afternoon", duration: 210, icon: "museum", detail: "Choose priority galleries, the Shrine of the Book, and the model of Second Temple Jerusalem.", source: "https://www.imj.org.il/en" },
+        { id: "jer-city-david", title: "City of David National Park", category: "sight", area: "Old City", bestTime: "morning", duration: 210, icon: "columns-3", detail: "An archaeological visit south of the Old City. Check route difficulty, water sections, and reservation requirements.", source: "https://cityofdavid.org.il/en/" },
+        { id: "jer-yad-vashem", title: "Yad Vashem", category: "culture", area: "Mount Herzl", bestTime: "morning", duration: 240, icon: "landmark", detail: "Protect a dedicated half day and review visitor guidance before arrival.", source: "https://www.yadvashem.org/visiting.html" },
+        { id: "jer-mahane", title: "Mahane Yehuda Market", category: "food", area: "Mahane Yehuda", bestTime: "afternoon", duration: 120, icon: "shopping-basket", detail: "Explore the market during active hours and check closures around Shabbat and holidays.", source: "https://en.machne.co.il/" },
+        { id: "jer-national-library", title: "National Library of Israel", category: "culture", area: "Givat Ram", bestTime: "afternoon", duration: 150, icon: "library", detail: "Explore changing exhibitions and the landmark building. Confirm visitor access and exhibition hours.", source: "https://www.nli.org.il/en" },
+        { id: "jer-bible-lands", title: "Bible Lands Museum Jerusalem", category: "culture", area: "Givat Ram", bestTime: "afternoon", duration: 120, icon: "museum", detail: "A focused museum visit that pairs naturally with other Givat Ram institutions.", source: "https://www.blmj.org/en/" },
+        { id: "jer-botanical", title: "Jerusalem Botanical Gardens", category: "nature", area: "Givat Ram", bestTime: "afternoon", duration: 120, icon: "flower-2", detail: "A lower-intensity outdoor stop. Check seasonal conditions, opening hours, and current access.", source: "https://www.botanic.co.il/en/" },
+        { id: "jer-begin", title: "Menachem Begin Heritage Center", category: "culture", area: "German Colony", bestTime: "afternoon", duration: 120, icon: "museum", detail: "A historical museum and viewpoint near the Old City basin. Confirm tour language and entry times.", source: "https://www.begincenter.org.il/" },
+      ],
+    },
   };
 
   const genericDestination = (destination) => ({
@@ -913,15 +939,33 @@
       showPlannerStep(state.step);
     });
 
-    tripPlannerForm.addEventListener("submit", (event) => {
+    tripPlannerForm.addEventListener("submit", async (event) => {
       event.preventDefault();
       if (!validateBasics()) return;
-      state.currentTrip = createTripFromForm();
-      state.option = "balanced";
-      if (byId("savePreferenceProfile").checked) savePreferenceProfile();
-      renderTripResult();
-      showView("result");
+      setPlanGenerationState(true);
+      try {
+        state.currentTrip = await createTripFromForm();
+        state.option = "balanced";
+        if (byId("savePreferenceProfile").checked) savePreferenceProfile();
+        renderTripResult();
+        showView("result");
+      } catch (error) {
+        console.warn("Trip planning failed", error);
+        showError(byId("plannerError"), t("planningFailed"));
+      } finally {
+        setPlanGenerationState(false);
+      }
     });
+  }
+
+  function setPlanGenerationState(isGenerating) {
+    const button = byId("generatePlansBtn");
+    if (!button) return;
+    button.disabled = isGenerating;
+    button.classList.toggle("is-loading", isGenerating);
+    button.setAttribute("aria-busy", String(isGenerating));
+    const label = button.querySelector("span");
+    if (label) label.textContent = t(isGenerating ? "buildingRealPlans" : "createPlans");
   }
 
   function bindRouteBuilder() {
@@ -1583,7 +1627,7 @@
     };
   }
 
-  function createTripFromForm() {
+  async function createTripFromForm() {
     const destinations = state.routeMode === "multi"
       ? state.routeStops.map((stop) => ({ city: stop.city.trim(), nights: clampRouteNights(stop.nights) }))
       : [{ city: byId("plannerDestination").value.trim(), nights: Number(byId("plannerDuration").value) }];
@@ -1603,7 +1647,7 @@
       comments,
       avoidLateNights: textSignals.avoidLateNights,
     };
-    const template = findReusableTemplate(destinations[0].city, interests, state.sourcePlanId);
+    const template = findReusableTemplate(destinations[0].city, state.sourcePlanId);
     const trip = {
       id: `trip-${Date.now()}`,
       destination,
@@ -1621,6 +1665,9 @@
       selectedOption: "balanced",
       published: false,
     };
+    const cities = [...new Set(destinations.map((stop) => canonicalDestinationName(stop.city)).filter(Boolean))];
+    const citiesRequiringScan = cities.filter((city) => !(destinationLibrary[normalizeCity(city)]?.recommendations?.length));
+    await Promise.all(citiesRequiringScan.map((city) => ensureDestinationRecommendations(city)));
     trip.options = buildPlanOptions(trip);
     state.recommendationFilter = "all";
     state.recommendationCity = destinations[0].city;
@@ -1642,7 +1689,10 @@
     const isMultiCity = routeStops.length > 1;
     const routeLabel = routeStops.map((stop) => stop.city).join(" + ");
     const paceAdjustment = (type === "relaxed" && trip.profile.pace === "slow") || (type === "immersive" && trip.profile.pace === "active") ? 4 : 0;
-    const score = Math.min(97, baseScore + paceAdjustment + Math.min(2, trip.profile.interests.length));
+    const days = buildDays(trip, type);
+    const realPlaceCount = days.reduce((total, day) => total + day.items.filter((item) => item.recommendationId).length, 0);
+    const realPlaceCoverage = Math.min(1, realPlaceCount / Math.max(1, days.length * 2));
+    const score = Math.min(96, Math.round(baseScore - 12 + (realPlaceCoverage * 12) + paceAdjustment + Math.min(2, trip.profile.interests.length)));
     const titleMap = {
       balanced: isMultiCity ? `${routeLabel}, balanced your way` : `${info.name} essentials, your way`,
       immersive: isMultiCity ? `A deeper route through ${routeLabel}` : `A deeper taste of ${info.name}`,
@@ -1659,11 +1709,11 @@
       title: titleMap[type],
       summary: summaryMap[type],
       score,
-      days: buildDays(trip, info, type),
+      days,
     };
   }
 
-  function buildDays(trip, info, type) {
+  function buildDays(trip, type) {
     const routeStops = getTripStops(trip);
     const isMultiCity = routeStops.length > 1;
     const textSignals = analyzeFreeTextPreferences(trip.profile);
@@ -1704,17 +1754,42 @@
       family: "An accessible activity with shared appeal",
       event: "Theatre, music, and events matched to the destination",
     };
+    const usedRecommendationIds = new Map();
 
     return dayPlan.map(({ stop, cityIndex, localIndex }, index) => {
       const cityInfo = getDestinationInfo(stop.city);
-      let highlight = cityInfo.highlights[localIndex % cityInfo.highlights.length];
+      const cityKey = normalizeCity(stop.city);
+      if (!usedRecommendationIds.has(cityKey)) usedRecommendationIds.set(cityKey, new Set());
+      const used = usedRecommendationIds.get(cityKey);
       const requestedHighlights = [
         textSignals.beach ? "Beach or waterfront time" : "",
         textSignals.museum ? "Museum or gallery highlight" : "",
         textSignals.photography ? "Photography viewpoint and scenic walk" : "",
       ].filter(Boolean);
-      if (requestedHighlights[localIndex]) highlight = requestedHighlights[localIndex];
+      const requestedCategories = textSignals.museum
+        ? ["culture", "sight"]
+        : textSignals.beach
+          ? ["nature", "sight"]
+          : textSignals.photography
+            ? ["sight", "nature", "culture"]
+            : [];
       const chosenInterest = index % 2 === 0 ? interest : secondInterest;
+      const primaryCategories = requestedCategories.length
+        ? requestedCategories
+        : type === "immersive" ? ["culture", "sight", "neighborhood"] : type === "relaxed" ? ["nature", "sight", "culture"] : ["sight", "culture", "nature", "neighborhood"];
+      const primaryRecommendation = pickPlanRecommendation(cityInfo, used, primaryCategories, "morning");
+      const secondaryRecommendation = pickPlanRecommendation(
+        cityInfo,
+        used,
+        recommendationCategoriesForInterest(chosenInterest),
+        "afternoon",
+        primaryRecommendation?.area
+      );
+      const wantsEvents = trip.profile.interests.includes("event") || trip.profile.interests.includes("nightlife");
+      const eveningRecommendation = wantsEvents || (type === "immersive" && index % 2 === 1)
+        ? pickPlanRecommendation(cityInfo, used, ["event"], "evening", primaryRecommendation?.area || secondaryRecommendation?.area)
+        : null;
+      const fallbackHighlight = requestedHighlights[localIndex] || cityInfo.highlights[localIndex % cityInfo.highlights.length];
       const evening = textSignals.celebration && index === 0
         ? "Celebration dinner"
         : trip.profile.avoidLateNights || textSignals.avoidLateNights
@@ -1728,13 +1803,23 @@
       const items = isTransferDay
         ? [
           { time: "09:00", title: `Travel to ${stop.city}`, detail: "Protect time for the inter-city transfer and hotel check-in", category: "transport" },
-          { time: startTimes[1], title: highlight, detail: "A comfortable first look near your new base", category: "place" },
-          { time: startTimes[2], title: evening, detail: "Keep the first evening flexible after the transfer", category: evening.includes("dinner") ? "food" : "event" },
+          primaryRecommendation
+            ? itineraryItemFromRecommendation(primaryRecommendation, startTimes[1], stop.city)
+            : { time: startTimes[1], title: fallbackHighlight, detail: "A comfortable first look near your new base", category: "place" },
+          eveningRecommendation
+            ? itineraryItemFromRecommendation(eveningRecommendation, startTimes[2], stop.city)
+            : { time: startTimes[2], title: evening, detail: "Keep the first evening flexible after the transfer", category: evening.includes("dinner") ? "food" : "event" },
         ]
         : [
-          { time: startTimes[0], title: highlight, detail: index === 0 ? "Orientation at a comfortable pace" : "Clustered with nearby stops to reduce travel time", category: "place" },
-          { time: startTimes[1], title: interestLabels[chosenInterest] || interestLabels.culture, detail: details[chosenInterest] || details.culture, category: chosenInterest },
-          { time: startTimes[2], title: evening, detail: type === "immersive" ? "Reserve ahead when the date is confirmed" : "Keep flexible until plans and energy are clear", category: evening.includes("dinner") ? "food" : "event" },
+          primaryRecommendation
+            ? itineraryItemFromRecommendation(primaryRecommendation, startTimes[0], stop.city)
+            : { time: startTimes[0], title: fallbackHighlight, detail: index === 0 ? "Orientation at a comfortable pace" : "Clustered with nearby stops to reduce travel time", category: "place" },
+          secondaryRecommendation
+            ? itineraryItemFromRecommendation(secondaryRecommendation, startTimes[1], stop.city)
+            : { time: startTimes[1], title: interestLabels[chosenInterest] || interestLabels.culture, detail: details[chosenInterest] || details.culture, category: chosenInterest },
+          eveningRecommendation
+            ? itineraryItemFromRecommendation(eveningRecommendation, startTimes[2], stop.city)
+            : { time: startTimes[2], title: evening, detail: type === "immersive" ? "Reserve ahead when the date is confirmed" : "Keep flexible until plans and energy are clear", category: evening.includes("dinner") ? "food" : "event" },
         ];
       return {
         day: index + 1,
@@ -1745,9 +1830,59 @@
     });
   }
 
+  function recommendationCategoriesForInterest(interest) {
+    return ({
+      food: ["food", "neighborhood", "culture"],
+      culture: ["culture", "sight"],
+      architecture: ["sight", "culture", "neighborhood"],
+      nature: ["nature", "sight"],
+      nightlife: ["event", "neighborhood"],
+      shopping: ["food", "neighborhood", "culture"],
+      wellness: ["nature", "culture"],
+      family: ["sight", "nature", "culture"],
+      event: ["event", "culture"],
+    })[interest] || ["culture", "sight", "nature"];
+  }
+
+  function pickPlanRecommendation(info, usedIds, categories, bestTime, preferredArea = "") {
+    const categoryRank = new Map(categories.map((category, index) => [category, categories.length - index]));
+    const normalizedArea = normalizeDestinationText(preferredArea);
+    const ranked = (info.recommendations || [])
+      .filter((recommendation) => recommendation?.id && !usedIds.has(recommendation.id))
+      .map((recommendation) => {
+        const categoryScore = categoryRank.get(recommendation.category) || 0;
+        const timeScore = recommendation.bestTime === bestTime ? 5 : 0;
+        const areaScore = normalizedArea && normalizeDestinationText(recommendation.area) === normalizedArea ? 4 : 0;
+        const sourceScore = recommendation.source ? 3 : 0;
+        const curatedScore = String(recommendation.id).startsWith("osm-") ? 0 : 12;
+        return { recommendation, score: (categoryScore * 10) + timeScore + areaScore + sourceScore + curatedScore + Math.min(8, Number(recommendation.scanScore) || 0) };
+      })
+      .filter((candidate) => categoryRank.has(candidate.recommendation.category))
+      .sort((left, right) => right.score - left.score || left.recommendation.title.localeCompare(right.recommendation.title));
+    const curated = ranked.filter((candidate) => !String(candidate.recommendation.id).startsWith("osm-"));
+    const selected = (curated[0] || ranked[0])?.recommendation || null;
+    if (selected) usedIds.add(selected.id);
+    return selected;
+  }
+
+  function itineraryItemFromRecommendation(recommendation, time, city) {
+    return {
+      time,
+      title: recommendation.title,
+      detail: `${recommendation.detail} · ${formatRecommendationDuration(recommendation.duration)}`,
+      recommendationId: recommendation.id,
+      recommendationCity: city,
+      source: recommendation.source,
+      sourceKind: recommendation.sourceKind,
+      category: recommendation.category,
+      area: recommendation.area,
+      autoScheduled: true,
+    };
+  }
+
   function renderTimelineTitle(item, day, dayIndex, itemIndex, fallbackCity) {
     const city = item.recommendationCity || day.city || fallbackCity;
-    const addedLabel = item.recommendationId ? `<span class="added-activity-label">${escapeHtml(t("addedToTrip"))}</span>` : "";
+    const addedLabel = item.recommendationId && !item.autoScheduled ? `<span class="added-activity-label">${escapeHtml(t("addedToTrip"))}</span>` : "";
     if (isRestaurantSuggestion(item)) {
       const nearbySight = resolveNearbySight(item, day, itemIndex, city);
       const restaurantUrl = googleMapsRestaurantUrl(city, nearbySight.area, nearbySight.title);
@@ -1765,7 +1900,7 @@
       ? ` data-recommendation-id="${escapeHtml(item.recommendationId)}" data-recommendation-city="${escapeHtml(item.recommendationCity || day.city || fallbackCity)}" tabindex="-1"`
       : "";
     return `
-      <div class="timeline-item ${item.recommendationId ? "added-activity" : ""}" data-day-index="${dayIndex}" data-item-index="${itemIndex}"${recommendationAttributes}>
+      <div class="timeline-item ${item.recommendationId && !item.autoScheduled ? "added-activity" : ""}" data-day-index="${dayIndex}" data-item-index="${itemIndex}"${recommendationAttributes}>
         ${renderItineraryTimeControl(item, dayIndex, itemIndex)}
         <span class="timeline-item-content">${renderTimelineTitle(item, day, dayIndex, itemIndex, fallbackCity)}<small>${escapeHtml(item.detail)}</small></span>
         ${renderItineraryMoveActions(item, dayIndex, itemIndex)}
@@ -1773,6 +1908,7 @@
   }
 
   function isRestaurantSuggestion(item = {}) {
+    if (/market|marketplace|food hall/i.test(item.title || "")) return false;
     return item.category === "food" || /restaurant|dinner|lunch|food|tasting|cafe|café|taverna/i.test(item.title || "");
   }
 
@@ -3046,18 +3182,10 @@
     state.preferences[question] = selected?.dataset.value || "balanced";
   }
 
-  function findReusableTemplate(destination, interests, requestedId) {
+  function findReusableTemplate(destination, requestedId) {
     if (requestedId) return communityTrips.find((trip) => trip.id === requestedId) || null;
     const normalized = normalizeCity(destination);
-    const exact = communityTrips.find((trip) => normalizeCity(trip.destination) === normalized);
-    if (exact) return exact;
-    let best = null;
-    let bestScore = 0;
-    communityTrips.forEach((trip) => {
-      const score = trip.tags.filter((tag) => interests.includes(tag)).length;
-      if (score > bestScore) { best = trip; bestScore = score; }
-    });
-    return bestScore >= 2 ? best : null;
+    return communityTrips.find((trip) => normalizeCity(trip.destination) === normalized) || null;
   }
 
   function getTripStops(trip) {
