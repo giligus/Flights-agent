@@ -3,194 +3,393 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>co-travel | Your travel assistance agent</title>
+    <meta name="description" content="Plan a personalized trip, compare three itineraries, and reuse community travel ideas with co-travel.">
+    <title>co-travel | Trips shaped around you</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./styles.css">
+    <link rel="stylesheet" href="./planner.css">
   </head>
   <body>
-    <main class="shell">
-      <header class="topbar">
-        <div class="brand-lockup">
-          <span class="brand-mark" aria-hidden="true"><i data-lucide="compass"></i></span>
-          <div>
-            <h1>co-travel</h1>
-            <p class="subtitle">Your travel assistance agent</p>
-          </div>
-        </div>
+    <main class="shell product-shell">
+      <header class="topbar product-topbar">
+        <button class="brand-lockup brand-button" type="button" data-planner-view="discover" aria-label="co-travel home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg class="brand-compass" viewBox="0 0 48 48" focusable="false">
+              <circle class="brand-compass-face" cx="24" cy="24" r="17"></circle>
+              <circle class="brand-compass-ring" cx="24" cy="24" r="13.5"></circle>
+              <path class="brand-compass-ticks" d="M24 8.5v4M39.5 24h-4M24 39.5v-4M8.5 24h4"></path>
+              <path class="brand-compass-needle north" d="M24 10.5 28.1 22.2 24 24.8 19.9 22.2Z"></path>
+              <path class="brand-compass-needle south" d="M24 37.5 19.9 25.8 24 23.2 28.1 25.8Z"></path>
+              <circle class="brand-compass-pin" cx="24" cy="24" r="2.2"></circle>
+            </svg>
+          </span>
+          <span>
+            <strong class="product-name">co-travel</strong>
+            <small class="subtitle" data-planner-copy="brandTagline">Trips shaped around you</small>
+          </span>
+        </button>
+
+        <nav class="product-nav" aria-label="Primary navigation">
+          <button class="product-nav-link active" type="button" data-planner-view="discover" data-planner-copy="discover">Discover</button>
+          <button class="product-nav-link" type="button" data-planner-view="planner" data-planner-copy="planTrip">Plan a trip</button>
+          <button class="product-nav-link" type="button" data-planner-view="saved" data-planner-copy="myTrips">My trips</button>
+          <button class="product-nav-link" type="button" data-planner-view="tools" data-planner-copy="travelTools">Travel tools</button>
+        </nav>
+
         <div class="topbar-actions">
-          <div class="trust-note">
-            <i data-lucide="shield-check" aria-hidden="true"></i>
-            <span>Official sources. Private, browser-based ticket scanning.</span>
-          </div>
           <button id="languageToggle" class="language-toggle" type="button" aria-label="Switch language to Hebrew">
             <i data-lucide="languages" aria-hidden="true"></i>
-            <span>עברית</span>
+            <span>׳¢׳‘׳¨׳™׳×</span>
+          </button>
+          <button class="primary compact-primary" type="button" data-planner-view="planner">
+            <i data-lucide="sparkles" aria-hidden="true"></i>
+            <span data-planner-copy="newTrip">New trip</span>
           </button>
         </div>
       </header>
 
-      <section id="homeIntro" class="home-intro">
-        <div class="summary-label">Plan your travel - have an easy trip</div>
-        <h2>How can co-travel help?</h2>
-        <p>Upload an existing ticket or plan the essential details of your next trip.</p>
+      <section id="plannerApp" class="planner-app">
+        <section id="discoverView" class="planner-view" data-view="discover">
+          <div class="vacation-hero">
+            <div class="hero-copy">
+              <span class="eyebrow" data-planner-copy="heroEyebrow">Your pace. Your trip.</span>
+              <h1 data-planner-copy="heroTitle">Plan less. Travel more like yourself.</h1>
+              <p data-planner-copy="heroBody">Tell us what matters to you and your companions. co-travel turns those preferences into three practical trip plans you can compare and customize.</p>
+              <div class="hero-trust-row">
+                <span><i data-lucide="shield-check" aria-hidden="true"></i><span data-planner-copy="officialSources">Official-source travel checks</span></span>
+                <span><i data-lucide="users" aria-hidden="true"></i><span data-planner-copy="groupPreferences">Companion-aware preferences</span></span>
+              </div>
+            </div>
+            <figure class="hero-postcard">
+              <img id="heroDestinationImage" src="https://images.unsplash.com/photo-1611135459835-0d49a7c56c1c?auto=format&amp;fit=crop&amp;w=1200&amp;q=82" alt="A yellow tram on a Lisbon street">
+              <span class="postcard-route" aria-hidden="true"><i data-lucide="plane"></i></span>
+              <figcaption><strong id="heroDestinationName">Lisbon</strong><small id="heroDestinationMood">slow mornings · local food · ocean air</small></figcaption>
+              <a id="heroPhotoCredit" class="photo-credit" href="https://unsplash.com/photos/yellow-and-white-tram-on-road-near-white-concrete-building-during-daytime-tXAsBFXszNE" target="_blank" rel="noopener noreferrer">Photo: Freguesia de Estrela · Unsplash</a>
+            </figure>
+          </div>
+
+          <form id="quickPlanForm" class="quick-plan" novalidate>
+            <label class="quick-field">
+              <span><i data-lucide="map-pin" aria-hidden="true"></i><span data-planner-copy="destination">Destination</span></span>
+              <input id="quickDestination" type="text" list="destinationSuggestions" placeholder="Where do you want to go?" data-planner-placeholder="quickDestinationPlaceholder" required>
+            </label>
+            <label class="quick-field">
+              <span><i data-lucide="calendar-days" aria-hidden="true"></i><span data-planner-copy="dates">Dates</span></span>
+              <input id="quickStartDate" type="date" required>
+            </label>
+            <label class="quick-field">
+              <span><i data-lucide="moon" aria-hidden="true"></i><span data-planner-copy="duration">Duration</span></span>
+              <input id="quickDuration" type="number" min="1" step="1" inputmode="numeric" value="5" required>
+            </label>
+            <button class="primary quick-plan-action" type="submit">
+              <span data-planner-copy="startPlanning">Start planning</span>
+              <i data-lucide="arrow-right" aria-hidden="true"></i>
+            </button>
+          </form>
+          <p id="quickPlanError" class="form-error hidden" role="alert"></p>
+
+          <div class="plan-choice-divider" role="separator" aria-label="or">
+            <span data-planner-copy="or">or</span>
+          </div>
+
+          <section id="oneClickPlan" class="one-click-plan" aria-labelledby="one-click-title">
+            <div class="one-click-copy">
+              <h2 id="one-click-title" data-planner-copy="oneClickTitle">Already booked? Turn your reservation into a trip plan.</h2>
+            </div>
+            <label class="one-click-upload" for="oneClickFile">
+              <input id="oneClickFile" type="file" accept=".txt,.pdf,.png,.jpg,.jpeg,.webp,text/plain,application/pdf,image/*">
+              <span><i data-lucide="upload" aria-hidden="true"></i><span data-planner-copy="uploadReservation">Upload reservation</span></span>
+            </label>
+          </section>
+          <div id="oneClickStatus" class="one-click-status hidden" role="status" aria-live="polite"></div>
+          <section id="oneClickReview" class="one-click-review hidden" aria-live="polite"></section>
+
+          <section class="discovery-section" aria-labelledby="recommended-title">
+            <div class="discovery-heading">
+              <div>
+                <span class="eyebrow" data-planner-copy="communityEyebrow">Community inspiration</span>
+                <h2 id="recommended-title" data-planner-copy="recommendedTrips">Trips travelers love</h2>
+                <p data-planner-copy="recommendedBody">Use a highly rated plan as a starting point, then adapt it around your dates and preferences.</p>
+              </div>
+              <div class="community-filter" role="group" aria-label="Trip category">
+                <button class="filter-chip active" type="button" data-community-filter="all" data-planner-copy="forYou">For you</button>
+                <button class="filter-chip" type="button" data-community-filter="city">City</button>
+                <button class="filter-chip" type="button" data-community-filter="coast">Coast</button>
+                <button class="filter-chip" type="button" data-community-filter="culture">Culture</button>
+              </div>
+            </div>
+            <div id="communityTripGrid" class="community-trip-grid" aria-live="polite"></div>
+          </section>
+
+          <section class="preference-promise">
+            <div>
+              <span class="eyebrow" data-planner-copy="preferenceEyebrow">More than a destination search</span>
+              <h2 data-planner-copy="preferenceTitle">A plan that understands the group</h2>
+            </div>
+            <div class="preference-promise-grid">
+              <article><span><i data-lucide="gauge" aria-hidden="true"></i></span><strong data-planner-copy="paceTitle">Pace that fits</strong><p data-planner-copy="paceBody">Slow mornings or full days become part of the itinerary structure.</p></article>
+              <article><span><i data-lucide="handshake" aria-hidden="true"></i></span><strong data-planner-copy="balanceTitle">Companion balance</strong><p data-planner-copy="balanceBody">Must-haves, flexible preferences, and vetoes stay separate.</p></article>
+              <article><span><i data-lucide="route" aria-hidden="true"></i></span><strong data-planner-copy="reuseTitle">Smarter reuse</strong><p data-planner-copy="reuseBody">Strong community plans are adapted instead of rebuilt from zero.</p></article>
+            </div>
+          </section>
+        </section>
+
+        <section id="tripPlannerView" class="planner-view hidden" data-view="planner">
+          <div class="planner-header">
+            <div>
+              <span class="eyebrow" data-planner-copy="plannerEyebrow">Personalized trip builder</span>
+              <h1 data-planner-copy="plannerTitle">Let’s learn how your group likes to travel</h1>
+              <p data-planner-copy="plannerBody">Your answers create a shared preference profile. Hard requirements are always respected.</p>
+            </div>
+            <div class="planner-progress" aria-label="Planner progress">
+              <div class="progress-track"><span id="plannerProgressBar"></span></div>
+              <strong id="plannerStepLabel">Step 1 of 3</strong>
+            </div>
+          </div>
+
+          <form id="tripPlannerForm" class="trip-planner-form" novalidate>
+            <section class="planner-step" data-step="1">
+              <div class="step-title"><span>1</span><div><h2 data-planner-copy="basicsTitle">Start with the trip basics</h2><p data-planner-copy="basicsBody">These are used as hard filters before matching reusable trip plans.</p></div></div>
+              <div class="form-grid">
+                <div class="field wide route-mode-field">
+                  <span data-planner-copy="tripRoute">Trip route</span>
+                  <div class="route-mode-toggle" role="group" aria-label="Choose a single-city or multi-city trip">
+                    <button type="button" class="active" aria-pressed="true" data-route-mode="single"><i data-lucide="map-pin" aria-hidden="true"></i><span data-planner-copy="singleCity">One destination</span></button>
+                    <button type="button" aria-pressed="false" data-route-mode="multi"><i data-lucide="route" aria-hidden="true"></i><span data-planner-copy="multiCity">Multi-city route</span></button>
+                  </div>
+                  <small data-planner-copy="multiCityHint">Build an ordered route and choose how many nights to spend in each city.</small>
+                </div>
+                <label id="plannerDestinationField" class="field wide"><span data-planner-copy="destination">Destination</span><input id="plannerDestination" type="text" list="destinationSuggestions" placeholder="City or country" data-planner-placeholder="destinationPlaceholder" required></label>
+                <section id="multiCityBuilder" class="multi-city-builder field wide hidden" aria-label="Multi-city route">
+                  <div class="multi-city-heading"><div><strong data-planner-copy="citiesAndNights">Cities and nights</strong><small data-planner-copy="routeOrderHint">Arrange the cities in the order you will visit them.</small></div><span id="multiCityTotal" aria-live="polite">5 nights</span></div>
+                  <div id="multiCityStops" class="multi-city-stops"></div>
+                  <button id="addCityButton" class="add-city-button" type="button"><i data-lucide="plus" aria-hidden="true"></i><span data-planner-copy="addCity">Add another city</span></button>
+                </section>
+                <label class="field"><span data-planner-copy="departureCity">Departure city</span><input id="plannerOrigin" type="text" placeholder="For example, Tel Aviv" data-planner-placeholder="originPlaceholder"></label>
+                <label class="field"><span data-planner-copy="startDate">Start date</span><input id="plannerStartDate" type="date" required></label>
+                <label id="plannerDurationField" class="field"><span data-planner-copy="nights">Nights</span><input id="plannerDuration" type="number" min="1" step="1" inputmode="numeric" value="5" required></label>
+                <label class="field"><span data-planner-copy="groupType">Who is traveling?</span><select id="plannerGroup"><option value="solo" data-planner-copy="groupSolo">Solo</option><option value="couple" data-planner-copy="groupCouple" selected>Couple</option><option value="friends" data-planner-copy="groupFriends">Friends</option><option value="family" data-planner-copy="groupFamily">Family</option><option value="multigenerational" data-planner-copy="groupMulti">Multi-generational group</option></select></label>
+                <label class="field"><span data-planner-copy="budgetStyle">Budget style</span><select id="plannerBudget"><option value="value" data-planner-copy="budgetValue">Value conscious</option><option value="comfort" data-planner-copy="budgetComfort" selected>Comfort</option><option value="premium" data-planner-copy="budgetPremium">Premium</option></select></label>
+                <label class="field wide"><span data-planner-copy="companionNames">Companion names</span><input id="plannerCompanions" type="text" placeholder="Optional — for example, Maya and Dan" data-planner-placeholder="companionsPlaceholder"></label>
+              </div>
+            </section>
+
+            <section class="planner-step hidden" data-step="2">
+              <div class="step-title"><span>2</span><div><h2 data-planner-copy="styleTitle">Choose the rhythm that feels right</h2><p data-planner-copy="styleBody">Pick one answer in each row. There are no “correct” choices.</p></div></div>
+              <div class="concept-questions">
+                <fieldset class="concept-question" data-question="pace">
+                  <legend data-planner-copy="paceQuestion">A perfect morning starts…</legend>
+                  <button type="button" data-value="slow"><i data-lucide="coffee" aria-hidden="true"></i><strong data-planner-copy="paceSlowTitle">Slowly</strong><small data-planner-copy="paceSlowBody">Breakfast first, plans later</small></button>
+                  <button type="button" data-value="balanced" aria-pressed="true"><i data-lucide="sun-medium" aria-hidden="true"></i><strong data-planner-copy="paceBalancedTitle">Balanced</strong><small data-planner-copy="paceBalancedBody">One clear plan, no rush</small></button>
+                  <button type="button" data-value="active"><i data-lucide="sunrise" aria-hidden="true"></i><strong data-planner-copy="paceActiveTitle">Early</strong><small data-planner-copy="paceActiveBody">Make the most of the day</small></button>
+                </fieldset>
+                <fieldset class="concept-question" data-question="structure">
+                  <legend data-planner-copy="structureQuestion">How much should be decided in advance?</legend>
+                  <button type="button" data-value="spontaneous"><i data-lucide="wind" aria-hidden="true"></i><strong data-planner-copy="structureOpenTitle">Keep it open</strong><small data-planner-copy="structureOpenBody">Decide as we go</small></button>
+                  <button type="button" data-value="balanced" aria-pressed="true"><i data-lucide="scale" aria-hidden="true"></i><strong data-planner-copy="structureAnchorsTitle">Key anchors</strong><small data-planner-copy="structureAnchorsBody">Book the important parts</small></button>
+                  <button type="button" data-value="structured"><i data-lucide="list-checks" aria-hidden="true"></i><strong data-planner-copy="structurePlannedTitle">Plan it well</strong><small data-planner-copy="structurePlannedBody">Know what comes next</small></button>
+                </fieldset>
+                <fieldset class="concept-question" data-question="crowds">
+                  <legend data-planner-copy="crowdsQuestion">A famous sight is busiest at noon. What sounds best?</legend>
+                  <button type="button" data-value="avoid"><i data-lucide="leaf" aria-hidden="true"></i><strong data-planner-copy="crowdsAvoidTitle">Find a quiet alternative</strong><small data-planner-copy="crowdsAvoidBody">Atmosphere over checklist</small></button>
+                  <button type="button" data-value="timed" aria-pressed="true"><i data-lucide="clock-3" aria-hidden="true"></i><strong data-planner-copy="crowdsTimedTitle">Go at a quieter time</strong><small data-planner-copy="crowdsTimedBody">See it without the peak crowd</small></button>
+                  <button type="button" data-value="iconic"><i data-lucide="camera" aria-hidden="true"></i><strong data-planner-copy="crowdsIconicTitle">See the icon</strong><small data-planner-copy="crowdsIconicBody">It is famous for a reason</small></button>
+                </fieldset>
+              </div>
+            </section>
+
+            <section class="planner-step hidden" data-step="3">
+              <div class="step-title"><span>3</span><div><h2 data-planner-copy="interestsTitle">What should this trip make room for?</h2><p data-planner-copy="interestsBody">Choose the interests that matter, then add any non-negotiable requirements.</p></div></div>
+              <fieldset class="interest-picker">
+                <legend class="sr-only" data-planner-copy="tripInterests">Trip interests</legend>
+                <label><input type="checkbox" value="food" checked><i data-lucide="utensils" aria-hidden="true"></i><span data-planner-copy="interestFood">Local food</span></label>
+                <label><input type="checkbox" value="culture" checked><i data-lucide="landmark" aria-hidden="true"></i><span data-planner-copy="interestCulture">Culture</span></label>
+                <label><input type="checkbox" value="architecture"><i data-lucide="building-2" aria-hidden="true"></i><span data-planner-copy="interestArchitecture">Architecture</span></label>
+                <label><input type="checkbox" value="nature"><i data-lucide="trees" aria-hidden="true"></i><span data-planner-copy="interestNature">Nature</span></label>
+                <label><input type="checkbox" value="nightlife"><i data-lucide="music-2" aria-hidden="true"></i><span data-planner-copy="interestNightlife">Nightlife</span></label>
+                <label><input type="checkbox" value="shopping"><i data-lucide="shopping-bag" aria-hidden="true"></i><span data-planner-copy="interestShopping">Shopping</span></label>
+                <label><input type="checkbox" value="wellness"><i data-lucide="heart-pulse" aria-hidden="true"></i><span data-planner-copy="interestWellness">Wellness</span></label>
+                <label><input type="checkbox" value="family"><i data-lucide="baby" aria-hidden="true"></i><span data-planner-copy="interestFamily">Family activities</span></label>
+                <label><input type="checkbox" value="event"><i data-lucide="tickets" aria-hidden="true"></i><span data-planner-copy="interestEvents">Shows &amp; events</span></label>
+              </fieldset>
+              <div class="form-grid requirement-grid">
+                <label class="field"><span data-planner-copy="mobility">Mobility needs</span><select id="plannerMobility"><option value="none" data-planner-copy="mobilityNone">No special requirements</option><option value="low-walking" data-planner-copy="mobilityLowWalking">Limit long walking days</option><option value="step-free" data-planner-copy="mobilityStepFree">Step-free routes needed</option></select></label>
+                <label class="field"><span data-planner-copy="dietary">Dietary needs</span><input id="plannerDietary" type="text" placeholder="Optional — vegetarian, allergies, kosher…" data-planner-placeholder="dietaryPlaceholder"></label>
+                <label class="field wide"><span data-planner-copy="mustHave">Must-have or avoid</span><textarea id="plannerConstraints" placeholder="For example: one beach day, avoid late nights, museum for Maya" data-planner-placeholder="constraintsPlaceholder"></textarea></label>
+              </div>
+              <label class="privacy-note"><input id="savePreferenceProfile" type="checkbox" checked><span><strong data-planner-copy="rememberProfile">Remember this preference profile on this device</strong><small data-planner-copy="rememberProfileBody">You can remove it later from My trips. Nothing is uploaded by this static demo.</small></span></label>
+            </section>
+
+            <p id="plannerError" class="form-error hidden" role="alert"></p>
+            <div class="planner-actions">
+              <button id="plannerBackBtn" class="secondary hidden" type="button"><i data-lucide="arrow-left" aria-hidden="true"></i><span data-planner-copy="back">Back</span></button>
+              <button id="plannerNextBtn" class="primary" type="button"><span data-planner-copy="continue">Continue</span><i data-lucide="arrow-right" aria-hidden="true"></i></button>
+              <button id="generatePlansBtn" class="primary hidden" type="submit"><i data-lucide="sparkles" aria-hidden="true"></i><span data-planner-copy="createPlans">Create my three plans</span></button>
+            </div>
+          </form>
+        </section>
+
+        <section id="tripResultView" class="planner-view hidden" data-view="result" aria-live="polite">
+          <div id="tripResultContent"></div>
+        </section>
+
+        <section id="tripStoryView" class="planner-view hidden" data-view="story" aria-live="polite">
+          <div id="tripStoryContent"></div>
+        </section>
+
+        <section id="savedTripsView" class="planner-view hidden" data-view="saved">
+          <div class="saved-header">
+            <div><span class="eyebrow" data-planner-copy="savedEyebrow">Your travel workspace</span><h1 data-planner-copy="savedTitle">Saved and published trips</h1><p data-planner-copy="savedBody">Plans are stored only in this browser in the current MVP.</p></div>
+            <button class="primary" type="button" data-planner-view="planner"><i data-lucide="plus" aria-hidden="true"></i><span data-planner-copy="newTrip">New trip</span></button>
+          </div>
+          <div id="savedTripsGrid" class="saved-trips-grid"></div>
+        </section>
       </section>
 
-      <section id="serviceHub" class="service-hub" aria-label="Travel assistance tools">
-        <button class="service-tile service-scan" type="button" data-service="scan">
-          <span class="service-icon" aria-hidden="true"><i data-lucide="file-search"></i></span>
-          <span class="service-copy">
-            <strong>Scan my ticket</strong>
-            <small>Upload a PDF or image to extract and organize your flight details.</small>
-          </span>
-          <i class="service-arrow" data-lucide="arrow-right" aria-hidden="true"></i>
-        </button>
-        <button class="service-tile service-requirements" type="button" data-service="requirements">
-          <span class="service-icon" aria-hidden="true"><i data-lucide="clipboard-check"></i></span>
-          <span class="service-copy">
-            <strong>Check entry requirements</strong>
-            <small>Gather the passport, visa, transit, and health details for your journey.</small>
-          </span>
-          <i class="service-arrow" data-lucide="arrow-right" aria-hidden="true"></i>
-        </button>
-        <button class="service-tile service-visa" type="button" data-service="visa">
-          <span class="service-icon" aria-hidden="true"><i data-lucide="badge-check"></i></span>
-          <span class="service-copy">
-            <strong>Find an official visa site</strong>
-            <small>Find official government visa services for up to five destinations.</small>
-          </span>
-          <i class="service-arrow" data-lucide="arrow-right" aria-hidden="true"></i>
-        </button>
-        <button class="service-tile service-destination" type="button" data-service="destination">
-          <span class="service-icon" aria-hidden="true"><i data-lucide="map-pinned"></i></span>
-          <span class="service-copy">
-            <strong>Explore a destination</strong>
-            <small>Review weather, currency, official advisories, and local events.</small>
-          </span>
-          <i class="service-arrow" data-lucide="arrow-right" aria-hidden="true"></i>
-        </button>
+      <section id="legacyTools" class="legacy-tools hidden">
+        <section id="homeIntro" class="home-intro tools-hero">
+          <div class="tools-hero-copy">
+            <span class="eyebrow" data-planner-copy="toolsEyebrow">Practical travel support</span>
+            <h1 data-planner-copy="toolsTitle">Everything your trip needs, in one calm place.</h1>
+            <p data-planner-copy="toolsBody">Scan reservations, check official entry requirements, find government visa services, and explore destination essentials.</p>
+            <div class="hero-trust-row"><span><i data-lucide="shield-check" aria-hidden="true"></i>Official sources</span><span><i data-lucide="lock-keyhole" aria-hidden="true"></i>Private browser processing</span></div>
+          </div>
+          <div class="tools-hero-art" aria-hidden="true"><span class="tools-sun"></span><span class="tools-card tools-card-back"><i data-lucide="map"></i></span><span class="tools-card tools-card-front"><i data-lucide="plane-takeoff"></i><strong>Ready when you are</strong></span></div>
+        </section>
+
+        <section id="serviceHub" class="service-hub" aria-label="Travel assistance tools">
+          <button class="service-tile service-scan" type="button" data-service="scan">
+            <span class="service-icon" aria-hidden="true"><i data-lucide="file-search"></i></span>
+            <span class="service-copy"><strong>Scan my ticket</strong><small>Upload a PDF or image to extract and organize your flight details.</small></span>
+            <i class="service-arrow" data-lucide="arrow-right" aria-hidden="true"></i>
+            <span class="service-illustration" aria-hidden="true">
+              <svg viewBox="0 0 240 130">
+                <g class="illustration-soft"><circle cx="194" cy="24" r="18"></circle><path d="M22 105c35-35 70-40 104-28s58 10 92-18"></path></g>
+                <g class="illustration-main ticket-art"><path d="M48 34h137a11 11 0 0 1 11 11v14a10 10 0 0 0 0 20v14a11 11 0 0 1-11 11H48a11 11 0 0 1-11-11V79a10 10 0 0 0 0-20V45a11 11 0 0 1 11-11Z"></path><path d="M152 36v66M152 48v7m0 9v7m0 9v7"></path><path d="m77 70 48-17-13 17 14 9-7 5-18-5-13 11-6-2 5-15Z"></path></g>
+              </svg>
+            </span>
+          </button>
+          <button class="service-tile service-requirements" type="button" data-service="requirements">
+            <span class="service-icon" aria-hidden="true"><i data-lucide="clipboard-check"></i></span>
+            <span class="service-copy"><strong>Check entry requirements</strong><small>Gather the passport, visa, transit, and health details for your journey.</small></span>
+            <i class="service-arrow" data-lucide="arrow-right" aria-hidden="true"></i>
+            <span class="service-illustration" aria-hidden="true">
+              <svg viewBox="0 0 240 130">
+                <g class="illustration-soft"><circle cx="47" cy="27" r="20"></circle><path d="M20 108c45-31 87-35 126-14 25 13 48 8 73-12"></path></g>
+                <g class="illustration-main requirements-art"><rect x="62" y="24" width="105" height="88" rx="11"></rect><path d="M91 24v-8h47v8M83 53h37m-37 17h47m-47 17h32"></path><path d="M158 55c18 0 28 7 28 7v18c0 18-12 27-28 33-16-6-28-15-28-33V62s10-7 28-7Z"></path><path d="m146 82 8 8 17-20"></path></g>
+              </svg>
+            </span>
+          </button>
+          <button class="service-tile service-visa" type="button" data-service="visa">
+            <span class="service-icon" aria-hidden="true"><i data-lucide="badge-check"></i></span>
+            <span class="service-copy"><strong>Find an official visa site</strong><small>Find the official government visa service for one destination.</small></span>
+            <i class="service-arrow" data-lucide="arrow-right" aria-hidden="true"></i>
+            <span class="service-illustration" aria-hidden="true">
+              <svg viewBox="0 0 240 130">
+                <g class="illustration-soft"><circle cx="202" cy="94" r="25"></circle><path d="M27 100c28-31 67-39 103-23 31 14 59 9 85-12"></path></g>
+                <g class="illustration-main visa-art"><g transform="rotate(-9 121 67)"><circle cx="121" cy="67" r="49"></circle><circle cx="121" cy="67" r="38"></circle><path d="M83 67h76M121 29c13 12 20 25 20 38s-7 27-20 38M121 29c-13 12-20 25-20 38s7 27 20 38"></path><path d="m105 67 11 11 23-28"></path></g><path d="M62 111h121"></path></g>
+              </svg>
+            </span>
+          </button>
+          <button class="service-tile service-destination" type="button" data-service="destination">
+            <span class="service-icon" aria-hidden="true"><i data-lucide="map-pinned"></i></span>
+            <span class="service-copy"><strong>Explore a destination</strong><small>Review weather, currency, official advisories, and local events.</small></span>
+            <i class="service-arrow" data-lucide="arrow-right" aria-hidden="true"></i>
+            <span class="service-illustration" aria-hidden="true">
+              <svg viewBox="0 0 240 130">
+                <g class="illustration-soft"><circle cx="189" cy="28" r="18"></circle><path d="M31 108c36-25 67-30 100-14 28 14 55 10 81-12"></path></g>
+                <g class="illustration-main destination-art"><path d="m47 39 44-14 49 14 47-14v77l-47 14-49-14-44 14Z"></path><path d="M91 25v77m49-63v77"></path><path d="M70 88c20-33 44-44 70-33 18 8 27 18 34 32"></path><circle cx="72" cy="87" r="5"></circle><circle cx="174" cy="87" r="5"></circle><path d="M128 52c0 14-18 30-18 30S92 66 92 52a18 18 0 1 1 36 0Z"></path><circle cx="110" cy="52" r="5"></circle></g>
+              </svg>
+            </span>
+          </button>
+        </section>
+
+        <section id="activeFlowBar" class="active-flow-bar hidden" aria-label="Current service">
+          <button id="backServicesBtn" class="flow-back" type="button"><i data-lucide="arrow-left" aria-hidden="true"></i>All services</button>
+          <div><strong id="activeFlowTitle"></strong><span id="activeFlowDescription"></span></div>
+        </section>
+
+        <section id="standaloneToolPanel" class="standalone-tool hidden" aria-live="polite"></section>
+
+        <section id="flightWorkspace" class="workspace hidden" aria-label="Flight parser workspace">
+          <section class="source-panel" aria-labelledby="source-title">
+            <div class="section-heading"><span class="section-icon icon-blue" aria-hidden="true"><i data-lucide="scan-line"></i></span><div><h2 id="source-title">Upload your flight ticket</h2><p>Upload a PDF, screenshot, or clear photo. Review the extracted information before analysis.</p></div></div>
+            <div class="mode-row" role="radiogroup" aria-label="Input mode">
+              <label><input type="radio" name="mode" value="file" checked><i data-lucide="upload" aria-hidden="true"></i>Upload file</label>
+              <label><input type="radio" name="mode" value="text"><i data-lucide="text-cursor-input" aria-hidden="true"></i>Paste text</label>
+            </div>
+            <label id="dropZone" class="drop-zone" for="ticketFile"><span class="drop-icon" aria-hidden="true"><i data-lucide="file-up"></i></span><span class="drop-title">Drop your ticket here or browse files</span><span class="drop-detail">PDF, PNG, JPG, JPEG, WebP, or TXT. Your file is processed locally in this browser.</span><input id="ticketFile" type="file" accept=".txt,.pdf,.png,.jpg,.jpeg,.webp,text/plain,application/pdf,image/*"></label>
+            <div id="fileMeta" class="file-meta hidden"></div>
+            <div id="extractStatus" class="extract-status hidden" role="status" aria-live="polite"><div class="status-row"><span id="statusText">Preparing file...</span><span id="statusPercent">0%</span></div><div class="progress-track" aria-hidden="true"><div id="progressBar" class="progress-bar"></div></div></div>
+            <details id="textReview" class="text-review"><summary><i data-lucide="file-text" aria-hidden="true"></i><span id="textReviewLabel">Review extracted text</span><small>Optional</small></summary><label class="text-label" for="ticketText">Ticket text</label><textarea id="ticketText" spellcheck="false" placeholder="Paste the text from your ticket here..."></textarea></details>
+            <div class="actions"><button id="analyzeBtn" class="primary" type="button"><i data-lucide="sparkles" aria-hidden="true"></i>Analyze ticket</button><button id="clearBtn" class="secondary" type="button">Clear</button></div>
+          </section>
+
+          <section class="result-panel" aria-labelledby="result-title">
+            <div class="section-heading"><span class="section-icon icon-teal" aria-hidden="true"><i data-lucide="plane"></i></span><div><h2 id="result-title">Your itinerary</h2><p>Key travel details appear first. Additional information is available in the tabs below.</p></div></div>
+            <div id="emptyState" class="empty-state"><span class="empty-icon" aria-hidden="true"><i data-lucide="ticket-check"></i></span><strong>Your itinerary will appear here</strong><p>Upload a ticket, review the extracted text, then select Analyze ticket.</p></div>
+            <div id="results" class="hidden">
+              <div id="resultNotice" class="notice">Running in the browser with the local parser.</div>
+              <div class="summary-grid" id="summaryGrid"></div><div class="priority-strip" id="importantPanel"></div>
+              <div class="tabs" role="tablist" aria-label="Flight result views"><button class="tab active" type="button" data-tab="itinerary">Itinerary</button><button class="tab" type="button" data-tab="destination">Destination</button><button class="tab" type="button" data-tab="requirements">Requirements</button><button class="tab" type="button" data-tab="table">All details</button><button class="tab" type="button" data-tab="data">Advanced</button></div>
+              <section id="itineraryTab" class="tab-panel"></section><section id="destinationTab" class="tab-panel hidden"></section><section id="requirementsTab" class="tab-panel hidden"></section><section id="tableTab" class="tab-panel hidden"></section>
+              <section id="dataTab" class="tab-panel hidden"><button id="downloadBtn" class="secondary" type="button"><i data-lucide="download" aria-hidden="true"></i>Download trip data</button><pre id="jsonOutput"></pre></section>
+            </div>
+          </section>
+        </section>
       </section>
 
-      <section id="activeFlowBar" class="active-flow-bar hidden" aria-label="Current service">
-        <button id="backServicesBtn" class="flow-back" type="button">
-          <i data-lucide="arrow-left" aria-hidden="true"></i>
-          All services
-        </button>
-        <div>
-          <strong id="activeFlowTitle"></strong>
-          <span id="activeFlowDescription"></span>
+      <datalist id="destinationSuggestions"></datalist>
+    </main>
+
+    <div id="itineraryDetailModal" class="itinerary-detail-modal hidden" aria-hidden="true">
+      <div class="itinerary-detail-backdrop" data-detail-close aria-hidden="true"></div>
+      <section class="itinerary-detail-sheet" role="dialog" aria-modal="true" aria-labelledby="itineraryDetailTitle" tabindex="-1">
+        <button class="itinerary-detail-close" type="button" data-detail-close aria-label="Close details"><i data-lucide="x" aria-hidden="true"></i></button>
+        <span id="itineraryDetailEyebrow" class="eyebrow"></span>
+        <h2 id="itineraryDetailTitle"></h2>
+        <div id="itineraryDetailMeta" class="itinerary-detail-meta"></div>
+        <p id="itineraryDetailSummary" class="itinerary-detail-summary"></p>
+        <p id="itineraryDetailNote" class="itinerary-detail-note"></p>
+        <div id="itineraryDetailActions" class="itinerary-detail-actions"></div>
+      </section>
+    </div>
+
+    <div id="travelReadinessModal" class="itinerary-detail-modal travel-readiness-modal hidden" aria-hidden="true">
+      <div class="itinerary-detail-backdrop" data-readiness-close aria-hidden="true"></div>
+      <section class="itinerary-detail-sheet readiness-modal-sheet" role="dialog" aria-modal="true" aria-labelledby="travelReadinessTitle" tabindex="-1">
+        <button class="itinerary-detail-close" type="button" data-readiness-close aria-label="Close travel readiness"><i data-lucide="x" aria-hidden="true"></i></button>
+        <div data-readiness-overview>
+          <span class="eyebrow" data-planner-copy="readinessModalEyebrow">Before you travel</span>
+          <h2 id="travelReadinessTitle" data-planner-copy="travelReadiness">Travel readiness</h2>
+          <p class="readiness-modal-intro" data-planner-copy="readinessOpenBody">Review passport, entry authorization, and health checks</p>
+          <div class="readiness-items">
+            <div class="readiness-item"><span class="readiness-icon"><i data-lucide="passport" aria-hidden="true"></i></span><span><strong data-planner-copy="passport">Passport</strong><small data-planner-copy="passportBody">Add traveler details in the official checker</small></span></div>
+            <div class="readiness-item"><span class="readiness-icon"><i data-lucide="badge-check" aria-hidden="true"></i></span><span><strong data-planner-copy="entryRules">Entry authorization</strong><small data-planner-copy="entryRulesBody">Verify for every traveler and transit point</small></span></div>
+            <div class="readiness-item"><span class="readiness-icon"><i data-lucide="shield-check" aria-hidden="true"></i></span><span><strong data-planner-copy="healthSafety">Health and safety</strong><small data-planner-copy="healthSafetyBody">Review current official destination guidance</small></span></div>
+          </div>
+          <p class="readiness-warning" data-planner-copy="readinessWarning">Regulations are not cached as final answers. Verify passport, visa, transit, and health rules from official sources before booking.</p>
+          <button class="primary readiness-modal-action" type="button" data-readiness-requirements><i data-lucide="external-link" aria-hidden="true"></i><span data-planner-copy="checkRequirements">Check official requirements</span></button>
+        </div>
+        <div id="travelRequirementsView" class="travel-requirements-view hidden">
+          <div class="travel-requirements-heading">
+            <button class="secondary" type="button" data-readiness-back><i data-lucide="arrow-left" aria-hidden="true"></i><span data-planner-copy="back">Back</span></button>
+            <div><span class="eyebrow" data-planner-copy="readinessModalEyebrow">Before you travel</span><h2 id="travelRequirementsTitle" data-planner-copy="checkRequirements">Check official requirements</h2></div>
+          </div>
+          <div id="travelRequirementsHost" class="legacy-tools travel-requirements-host"></div>
         </div>
       </section>
+    </div>
 
-      <section id="standaloneToolPanel" class="standalone-tool hidden" aria-live="polite"></section>
-
-      <section id="flightWorkspace" class="workspace hidden" aria-label="Flight parser workspace">
-        <section class="source-panel" aria-labelledby="source-title">
-          <div class="section-heading">
-            <span class="section-icon icon-blue" aria-hidden="true"><i data-lucide="scan-line"></i></span>
-            <div>
-              <h2 id="source-title">Upload your flight ticket</h2>
-              <p>Upload a PDF, screenshot, or clear photo. Review the extracted information before analysis.</p>
-            </div>
-          </div>
-
-          <div class="mode-row" role="radiogroup" aria-label="Input mode">
-            <label>
-              <input type="radio" name="mode" value="file" checked>
-              <i data-lucide="upload" aria-hidden="true"></i>
-              Upload file
-            </label>
-            <label>
-              <input type="radio" name="mode" value="text">
-              <i data-lucide="text-cursor-input" aria-hidden="true"></i>
-              Paste text
-            </label>
-          </div>
-
-          <label id="dropZone" class="drop-zone" for="ticketFile">
-            <span class="drop-icon" aria-hidden="true"><i data-lucide="file-up"></i></span>
-            <span class="drop-title">Drop your ticket here or browse files</span>
-            <span class="drop-detail">PDF, PNG, JPG, JPEG, WebP, or TXT. Your file is processed locally in this browser.</span>
-            <input id="ticketFile" type="file" accept=".txt,.pdf,.png,.jpg,.jpeg,.webp,text/plain,application/pdf,image/*">
-          </label>
-
-          <div id="fileMeta" class="file-meta hidden"></div>
-          <div id="extractStatus" class="extract-status hidden" role="status" aria-live="polite">
-            <div class="status-row">
-              <span id="statusText">Preparing file...</span>
-              <span id="statusPercent">0%</span>
-            </div>
-            <div class="progress-track" aria-hidden="true">
-              <div id="progressBar" class="progress-bar"></div>
-            </div>
-          </div>
-
-          <details id="textReview" class="text-review">
-            <summary>
-              <i data-lucide="file-text" aria-hidden="true"></i>
-              <span id="textReviewLabel">Review extracted text</span>
-              <small>Optional</small>
-            </summary>
-            <label class="text-label" for="ticketText">Ticket text</label>
-            <textarea id="ticketText" spellcheck="false" placeholder="Paste the text from your ticket here..."></textarea>
-          </details>
-
-          <div class="actions">
-            <button id="analyzeBtn" class="primary" type="button">
-              <i data-lucide="sparkles" aria-hidden="true"></i>
-              Analyze ticket
-            </button>
-            <button id="clearBtn" class="secondary" type="button">Clear</button>
-          </div>
-        </section>
-
-        <section class="result-panel" aria-labelledby="result-title">
-          <div class="section-heading">
-            <span class="section-icon icon-teal" aria-hidden="true"><i data-lucide="plane"></i></span>
-            <div>
-              <h2 id="result-title">Your itinerary</h2>
-              <p>Key travel details appear first. Additional information is available in the tabs below.</p>
-            </div>
-          </div>
-
-          <div id="emptyState" class="empty-state">
-            <span class="empty-icon" aria-hidden="true"><i data-lucide="ticket-check"></i></span>
-            <strong>Your itinerary will appear here</strong>
-            <p>Upload a ticket, review the extracted text, then select Analyze ticket.</p>
-          </div>
-
-          <div id="results" class="hidden">
-            <div id="resultNotice" class="notice">Running in the browser with the local parser.</div>
-
-            <div class="summary-grid" id="summaryGrid"></div>
-            <div class="priority-strip" id="importantPanel"></div>
-
-            <div class="tabs" role="tablist" aria-label="Flight result views">
-              <button class="tab active" type="button" data-tab="itinerary">Itinerary</button>
-              <button class="tab" type="button" data-tab="destination">Destination</button>
-              <button class="tab" type="button" data-tab="requirements">Requirements</button>
-              <button class="tab" type="button" data-tab="table">All details</button>
-              <button class="tab" type="button" data-tab="data">Advanced</button>
-            </div>
-
-            <section id="itineraryTab" class="tab-panel"></section>
-            <section id="destinationTab" class="tab-panel hidden"></section>
-            <section id="requirementsTab" class="tab-panel hidden"></section>
-            <section id="tableTab" class="tab-panel hidden"></section>
-            <section id="dataTab" class="tab-panel hidden">
-              <button id="downloadBtn" class="secondary" type="button">
-                <i data-lucide="download" aria-hidden="true"></i>
-                Download trip data
-              </button>
-              <pre id="jsonOutput"></pre>
-            </section>
-          </div>
-        </section>
-      </section>
-    </main>
+    <div id="plannerToast" class="planner-toast hidden" role="status" aria-live="polite"></div>
 
     <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
     <script src="./travel-data.js"></script>
     <script src="./i18n.js"></script>
     <script src="./ticket-parser.js"></script>
     <script src="./app.js"></script>
+    <script src="./planner.js"></script>
   </body>
 </html>

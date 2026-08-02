@@ -86,8 +86,8 @@ input {
 }
 
 .brand-mark svg {
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
 }
 
 h1,
@@ -434,6 +434,13 @@ h2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+}
+
+.visa-country-grid {
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-gutter: stable;
 }
 
 .destination-check {

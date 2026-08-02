@@ -54,6 +54,16 @@ const countryOptions = [
   ["GR", "Greece"],
   ["ES", "Spain"],
   ["NL", "Netherlands"],
+  ["AT", "Austria"],
+  ["AU", "Australia"],
+  ["CH", "Switzerland"],
+  ["IE", "Ireland"],
+  ["IN", "India"],
+  ["JP", "Japan"],
+  ["KR", "South Korea"],
+  ["NZ", "New Zealand"],
+  ["SG", "Singapore"],
+  ["TR", "Türkiye"],
 ];
 const passportTypeOptions = [
   ["", "Select type"],
@@ -69,6 +79,13 @@ const transitOptions = [
   ["landside", "Transit and enter country"],
 ];
 const officialVisaSources = {
+  GR: [
+    {
+      label: "Greece Ministry of Foreign Affairs",
+      url: "https://www.mfa.gr/en/services/visas-for-foreigners-traveling-to-greece/",
+      note: "Official Greek visa and entry guidance for foreign travelers.",
+    },
+  ],
   IL: [
     {
       label: "Israel Population & Immigration Authority",
@@ -128,6 +145,104 @@ const officialVisaSources = {
       label: "France-Visas",
       url: "https://france-visas.gouv.fr/en/",
       note: "Official French visa portal.",
+    },
+  ],
+  CA: [
+    {
+      label: "Immigration, Refugees and Citizenship Canada",
+      url: "https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada.html",
+      note: "Official Canadian visitor visa and electronic travel authorization guidance.",
+    },
+  ],
+  DE: [
+    {
+      label: "Germany Visa Navigator",
+      url: "https://www.auswaertiges-amt.de/en/2315524-2315524",
+      note: "Official German Federal Foreign Office visa navigator.",
+    },
+  ],
+  ES: [
+    {
+      label: "Spain Ministry of Foreign Affairs visas",
+      url: "https://www.exteriores.gob.es/en/ServiciosAlCiudadano/Paginas/Visados.aspx",
+      note: "Official Spanish visa information and application guidance.",
+    },
+  ],
+  NL: [
+    {
+      label: "NetherlandsWorldwide visa checker",
+      url: "https://www.netherlandsworldwide.nl/visa-the-netherlands",
+      note: "Official Dutch government guidance for visas to the Netherlands.",
+    },
+  ],
+  AT: [
+    {
+      label: "Austria Ministry for European and International Affairs",
+      url: "https://www.bmeia.gv.at/en/travel-stay/entrance-and-residence-in-austria/visa",
+      note: "Official Austrian visa and entry information.",
+    },
+  ],
+  CH: [
+    {
+      label: "Switzerland visa requirements",
+      url: "https://www.eda.admin.ch/eda/en/home/einreise-aufenthalt-schweiz/visabestimmungen-visumantragsformular.html",
+      note: "Official Swiss Federal Department of Foreign Affairs visa guidance.",
+    },
+  ],
+  IE: [
+    {
+      label: "Irish Immigration Service",
+      url: "https://www.irishimmigration.ie/coming-to-visit-ireland/",
+      note: "Official Irish visitor visa and travel guidance.",
+    },
+  ],
+  AU: [
+    {
+      label: "Australia visa finder",
+      url: "https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-finder/visit",
+      note: "Official Australian Department of Home Affairs visitor visa finder.",
+    },
+  ],
+  NZ: [
+    {
+      label: "Immigration New Zealand visitor visa",
+      url: "https://www.immigration.govt.nz/visas/visitor-visa/",
+      note: "Official New Zealand visitor visa information and application service.",
+    },
+  ],
+  JP: [
+    {
+      label: "Japan Ministry of Foreign Affairs eVISA",
+      url: "https://www.mofa.go.jp/j_info/visit/visa/visaonline.html",
+      note: "Official Japan eVISA information and eligibility guidance.",
+    },
+  ],
+  KR: [
+    {
+      label: "Korea Visa Portal",
+      url: "https://www.visa.go.kr/",
+      note: "Official Republic of Korea visa navigator and application portal.",
+    },
+  ],
+  SG: [
+    {
+      label: "Singapore entry visa checker",
+      url: "https://www.ica.gov.sg/enter-transit-depart/entering-singapore/visa_requirements",
+      note: "Official Singapore Immigration and Checkpoints Authority visa requirements.",
+    },
+  ],
+  IN: [
+    {
+      label: "India Visa Online",
+      url: "https://indianvisaonline.gov.in/",
+      note: "Official Government of India portal for regular visas and eVisas.",
+    },
+  ],
+  TR: [
+    {
+      label: "Türkiye e-Visa",
+      url: "https://www.evisa.gov.tr/en/",
+      note: "Official Republic of Türkiye electronic visa portal.",
     },
   ],
 };
@@ -210,7 +325,7 @@ const serviceDetails = {
   },
   visa: {
     title: "Find an official visa site",
-    description: "Select up to five destinations and access official government visa services.",
+    description: "Select one destination and access its official government visa services.",
   },
   destination: {
     title: "Explore a destination",
@@ -316,6 +431,9 @@ showHome();
 
 function showHome() {
   activeService = "";
+  activeFlowBar?.removeAttribute("data-service");
+  standaloneToolPanel?.removeAttribute("data-service");
+  flightWorkspace?.removeAttribute("data-service");
   homeIntro?.classList.remove("hidden");
   serviceHub?.classList.remove("hidden");
   activeFlowBar?.classList.add("hidden");
@@ -325,9 +443,12 @@ function showHome() {
   refreshIcons();
 }
 
-function showService(service) {
+function showService(service, options = {}) {
   activeService = service;
   const details = serviceDetails[service] || serviceDetails.scan;
+  activeFlowBar?.setAttribute("data-service", service);
+  standaloneToolPanel?.setAttribute("data-service", service);
+  flightWorkspace?.setAttribute("data-service", service);
   homeIntro?.classList.add("hidden");
   serviceHub?.classList.add("hidden");
   activeFlowBar?.classList.remove("hidden");
@@ -342,8 +463,20 @@ function showService(service) {
     renderStandaloneTool(service);
   }
   refreshIcons();
-  activeFlowBar?.scrollIntoView({ behavior: "smooth", block: "start" });
+  if (options.scroll !== false) activeFlowBar?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
+
+window.CoTravelLegacy = {
+  showHome,
+  showService,
+  getLanguage: () => currentLanguage,
+  extractTripFromFile: async (file) => {
+    await extractUploadedFile(file);
+    const rawText = ticketText.value.trim();
+    if (!rawText) throw new Error("No readable reservation text was found.");
+    return parseTicket(rawText);
+  },
+};
 
 function refreshIcons() {
   applyTranslations(document);
@@ -384,6 +517,7 @@ function setLanguage(language, rerender = true) {
   }
   applyTranslations(document);
   window.lucide?.createIcons();
+  window.dispatchEvent(new CustomEvent("co-travel-languagechange", { detail: { language: currentLanguage } }));
 }
 
 function applyTranslations(root = document) {
@@ -533,14 +667,6 @@ function renderStandaloneRequirements() {
           <h3><i data-lucide="landmark" aria-hidden="true"></i> Official sources</h3>
           <div id="standaloneRequirementSources"></div>
         </div>
-        <details class="advanced-details">
-          <summary><span><i data-lucide="braces" aria-hidden="true"></i> Advanced details</span></summary>
-          <p>Structured trip data for a licensed travel-requirements provider.</p>
-          <button class="secondary compact-button" id="standaloneCopyRequirementsBtn" type="button">
-            <i data-lucide="copy" aria-hidden="true"></i> Copy details
-          </button>
-          <pre id="standaloneQueryJson" class="query-json"></pre>
-        </details>
       </aside>
     </div>
   `;
@@ -595,15 +721,6 @@ function bindStandaloneRequirements() {
     updateStandaloneRequirementsPreview(true);
     if (notice) notice.textContent = "Your details are complete. Continue with the official sources in your checklist.";
   });
-  standaloneToolPanel.querySelector("#standaloneCopyRequirementsBtn")?.addEventListener("click", async (event) => {
-    await copyText(JSON.stringify(buildStandaloneRequirementsQuery(), null, 2));
-    event.currentTarget.textContent = "Copied";
-    window.setTimeout(() => {
-      event.currentTarget.innerHTML = '<i data-lucide="copy" aria-hidden="true"></i> Copy details';
-      refreshIcons();
-    }, 1400);
-  });
-
   updateStandaloneRequirementsPreview();
 }
 
@@ -642,14 +759,9 @@ function updateStandaloneRequirementsPreview(markPrepared = false) {
     </div>
   `;
 
-  const queryJson = standaloneToolPanel.querySelector("#standaloneQueryJson");
-  if (queryJson) queryJson.textContent = JSON.stringify(payload, null, 2);
-
-  const officialSources = [
-    ...buildRequirementSourcesForCountry(payload.route.destination_country),
-    ...buildRequirementSourcesForCountry(payload.route.origin_country),
-  ];
-  const uniqueSources = uniqueSourcesByUrl(officialSources);
+  const uniqueSources = uniqueSourcesByUrl(
+    buildRequirementSourcesForCountry(payload.route.destination_country)
+  );
   sources.innerHTML = uniqueSources.length
     ? uniqueSources.map(renderRequirementSource).join("")
     : `<div class="requirement-note">Choose a destination to show official government sources.</div>`;
@@ -705,13 +817,16 @@ function buildStandaloneRequirementsQuery() {
 
 function renderVisaTool() {
   const options = Object.entries(officialVisaSources)
+    .sort(([leftCode], [rightCode]) =>
+      (labelForCountry(leftCode) || leftCode).localeCompare(labelForCountry(rightCode) || rightCode)
+    )
     .map(([countryCode, sources]) => {
       const checked = visaSelectionState.has(countryCode) ? " checked" : "";
       return `
         <label class="destination-check" data-visa-option data-country-name="${escapeHtml(
           labelForCountry(countryCode) || countryCode
         )}">
-          <input type="checkbox" data-visa-country="${escapeHtml(countryCode)}"${checked}>
+          <input type="radio" name="visaDestination" data-visa-country="${escapeHtml(countryCode)}"${checked}>
           <span class="mini-icon" aria-hidden="true"><i data-lucide="map-pin"></i></span>
           <span>
             <b>${escapeHtml(labelForCountry(countryCode) || countryCode)}</b>
@@ -731,7 +846,7 @@ function renderVisaTool() {
             <div>
               <div class="summary-label">Official sources only</div>
               <h2>Where are you going?</h2>
-              <p>Select up to five destinations to view the relevant government or official authority websites.</p>
+              <p>Select one destination to view the relevant government or official authority websites.</p>
             </div>
           </div>
           <span id="visaSelectionCount" class="provider-badge">1 selected</span>
@@ -740,8 +855,8 @@ function renderVisaTool() {
           <i data-lucide="search" aria-hidden="true"></i>
           <input id="visaCountrySearch" type="search" aria-label="Search destinations" placeholder="Search destinations" autocomplete="off">
         </label>
-        <div class="destination-check-grid">${options}</div>
-        <div id="visaLimitNotice" class="requirement-note">Select between 1 and 5 destinations.</div>
+        <div class="destination-check-grid visa-country-grid">${options}</div>
+        <div id="visaLimitNotice" class="requirement-note">Choose another country at any time to replace your selection.</div>
       </section>
       <aside class="tool-card">
         <div class="tool-card-head">
@@ -766,22 +881,12 @@ function bindVisaTool() {
       option.classList.toggle("hidden", !option.dataset.countryName.toLowerCase().includes(query));
     });
   });
-  standaloneToolPanel.querySelectorAll("[data-visa-country]").forEach((checkbox) => {
-    checkbox.addEventListener("change", () => {
-      const countryCode = checkbox.dataset.visaCountry;
-      if (checkbox.checked && visaSelectionState.size >= 5) {
-        checkbox.checked = false;
-        showVisaLimitNotice("Maximum 5 destinations. Clear one destination before adding another.");
-        return;
-      }
-      if (checkbox.checked) {
-        visaSelectionState.add(countryCode);
-      } else if (visaSelectionState.size > 1) {
-        visaSelectionState.delete(countryCode);
-      } else {
-        checkbox.checked = true;
-        showVisaLimitNotice("Keep at least 1 destination selected.");
-      }
+  standaloneToolPanel.querySelectorAll("[data-visa-country]").forEach((radio) => {
+    radio.addEventListener("change", () => {
+      if (!radio.checked) return;
+      visaSelectionState.clear();
+      visaSelectionState.add(radio.dataset.visaCountry);
+      showVisaLimitNotice("Destination updated. Choose another country to replace it.");
       renderVisaResults();
     });
   });
@@ -1961,19 +2066,6 @@ function renderRequirements(trip) {
           </div>
         </article>
 
-        <details class="requirement-card advanced-details">
-          <summary>
-            <span><i data-lucide="braces" aria-hidden="true"></i> Advanced details</span>
-            <span id="requirementsStatus" class="provider-badge">Draft</span>
-          </summary>
-          <p>Technical trip data for a licensed travel-requirements provider.</p>
-          <div class="requirement-actions">
-            <button class="secondary compact-button" id="copyRequirementsBtn" type="button">
-              <i data-lucide="copy" aria-hidden="true"></i> Copy details
-            </button>
-          </div>
-          <div id="requirementsPreview" class="requirements-preview"></div>
-        </details>
       </section>
 
       <aside class="requirements-side" aria-label="Travel requirement results">
@@ -2017,19 +2109,7 @@ function bindRequirementComponents(trip) {
   });
 
   const prepareButton = requirementsTab.querySelector("#prepareRequirementsBtn");
-  const copyButton = requirementsTab.querySelector("#copyRequirementsBtn");
   if (prepareButton) prepareButton.addEventListener("click", () => updateRequirementsPreview(trip, true));
-  if (copyButton) {
-    copyButton.addEventListener("click", async () => {
-      const payload = buildRequirementsQuery(trip);
-      await copyText(JSON.stringify(payload, null, 2));
-      copyButton.textContent = "Copied";
-      window.setTimeout(() => {
-        copyButton.innerHTML = '<i data-lucide="copy" aria-hidden="true"></i> Copy details';
-        refreshIcons();
-      }, 1400);
-    });
-  }
   updateRequirementsPreview(trip);
 }
 
@@ -2038,23 +2118,25 @@ function updateRequirementsPreview(trip, markPrepared = false) {
   const status = requirementsTab.querySelector("#requirementsStatus");
   const preview = requirementsTab.querySelector("#requirementsPreview");
   const result = requirementsTab.querySelector("#requirementsResult");
-  if (!status || !preview || !result) return;
+  if (!result) return;
 
   const missing = payload.missing_inputs;
-  status.textContent = missing.length ? `${missing.length} ${missing.length === 1 ? "detail" : "details"} needed` : "Ready";
-  status.classList.toggle("provider-ready", missing.length === 0);
+  if (status) {
+    status.textContent = missing.length ? `${missing.length} ${missing.length === 1 ? "detail" : "details"} needed` : "Ready";
+    status.classList.toggle("provider-ready", missing.length === 0);
+  }
 
-  preview.innerHTML = `
-    <div class="query-grid">
-      ${renderQueryFact("Origin", payload.route.origin_airport || "-")}
-      ${renderQueryFact("Destination", payload.route.destination_airport || "-")}
-      ${renderQueryFact("Travel date", payload.travel.travel_date || "-")}
-      ${renderQueryFact("Nationality", labelForCountry(payload.passenger.nationality) || "-")}
-      ${renderQueryFact("Passport", labelForCountry(payload.passenger.passport_issuing_country) || "-")}
-      ${renderQueryFact("Stay", payload.travel.stay_length_days ? `${payload.travel.stay_length_days} days` : "-")}
-    </div>
-    <pre class="query-json">${escapeHtml(JSON.stringify(payload, null, 2))}</pre>
-  `;
+  if (preview) {
+    preview.innerHTML = `
+      <div class="query-grid">
+        ${renderQueryFact("Origin", payload.route.origin_airport || "-")}
+        ${renderQueryFact("Destination", payload.route.destination_airport || "-")}
+        ${renderQueryFact("Travel date", payload.travel.travel_date || "-")}
+        ${renderQueryFact("Nationality", labelForCountry(payload.passenger.nationality) || "-")}
+        ${renderQueryFact("Passport", labelForCountry(payload.passenger.passport_issuing_country) || "-")}
+        ${renderQueryFact("Stay", payload.travel.stay_length_days ? `${payload.travel.stay_length_days} days` : "-")}
+      </div>`;
+  }
 
   const resultText = missing.length
     ? `Still needed: ${missing.join(", ")}`
