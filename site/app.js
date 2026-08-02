@@ -908,6 +908,25 @@ function parseTicket(rawText) {
       /passenger\s*[:\-]\s*([A-Za-z][A-Za-z\s'.-]{1,80}?)(?:\s*\(|\s+(?:LY|EK|Ticket|Booking|Date|Issuing)\b|$)/i,
     ])
   );
+  const parsedSegments = window.CoTravelTicketParser?.parseSegments(rawText, airports) || [];
+  if (parsedSegments.length) {
+    return {
+      trip_id: `TRIP-${Date.now()}`,
+      passengers: [{ full_name: passenger || "" }],
+      segments: parsedSegments.map((segment) =>
+        enrichSegment({
+          ...segment,
+          pnr,
+          ticket_number: ticket,
+        })
+      ),
+      meta: {
+        raw_source_type: currentSourceType,
+        parser: "github_pages_static",
+      },
+    };
+  }
+
   const flightMatch = [...rawText.matchAll(/\b([A-Z]{2,3})\s?(\d{2,4})\b/g)].find(
     (match) => match[0].replace(/\s+/g, "").toUpperCase() !== pnr.toUpperCase()
   );
@@ -1115,7 +1134,10 @@ function formatFileSize(bytes) {
 function guessRoute(rawText) {
   const knownCodes = Object.keys(airports);
   const positions = knownCodes
-    .map((code) => ({ code, index: rawText.toUpperCase().indexOf(code) }))
+    .map((code) => ({
+      code,
+      index: rawText.toUpperCase().search(new RegExp(`\\b${code}\\b`)),
+    }))
     .filter((item) => item.index >= 0)
     .sort((a, b) => a.index - b.index);
 

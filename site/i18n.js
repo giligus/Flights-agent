@@ -1,6 +1,6 @@
 window.CO_TRAVEL_I18N = {
   he: {
-    "Your travel assistance agent": "סוכן הסיוע האישי שלך לנסיעות",
+    "Your travel assistance agent": "סוכן הנסיעות האישי שלך",
     "Switch language to Hebrew": "החלפת שפה לאנגלית",
     "Official sources. Private, browser-based ticket scanning.": "מקורות רשמיים. סריקת הכרטיס מתבצעת באופן פרטי בדפדפן.",
     "Plan your travel - have an easy trip": "תכננו את הנסיעה - וסעו בקלות",
