@@ -154,6 +154,34 @@ body {
   background: var(--travel-ocean-dark);
 }
 
+.share-site-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  border: 1px solid var(--travel-line);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--travel-ocean-dark);
+  padding: 8px 14px;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.share-site-button:hover {
+  border-color: rgba(15, 123, 128, 0.45);
+  background: var(--travel-ocean-soft);
+  transform: translateY(-1px);
+}
+
+.share-site-button svg {
+  width: 17px;
+  height: 17px;
+}
+
 .planner-app h1,
 .planner-app h2,
 .planner-app h3,
@@ -1587,7 +1615,9 @@ body {
   .product-topbar { flex-direction: row; align-items: center; justify-content: space-between; margin-inline: 0; }
   .product-topbar .topbar-actions { width: auto; flex-direction: row; align-items: center; }
   .brand-button .subtitle,
-  .compact-primary span { display: none; }
+  .compact-primary span,
+  .share-site-button span { display: none; }
+  .share-site-button { width: 42px; padding-inline: 0; }
   .product-nav { justify-content: flex-start; overflow-x: auto; }
   .product-nav-link { flex: 0 0 auto; }
   .vacation-hero { padding: 34px 24px 60px; border-radius: 22px; }

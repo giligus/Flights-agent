@@ -216,6 +216,9 @@
       tripPublished: "Trip published to the local demo feed.",
       linkCopied: "Share link copied.",
       linkCopyFailed: "Your browser could not copy the link.",
+      shareSite: "Share site",
+      shareSiteText: "Plan your next trip with Co-Travel.",
+      siteLinkCopied: "Co-Travel link copied.",
       passport: "Passport",
       passportBody: "Add traveler details in the official checker",
       entryRules: "Entry authorization",
@@ -465,6 +468,9 @@
       tripPublished: "הטיול פורסם בפיד המקומי של ההדגמה.",
       linkCopied: "הקישור הועתק.",
       linkCopyFailed: "הדפדפן לא הצליח להעתיק את הקישור.",
+      shareSite: "שיתוף האתר",
+      shareSiteText: "תכננו את הטיול הבא שלכם עם Co-Travel.",
+      siteLinkCopied: "הקישור ל-Co-Travel הועתק.",
       passport: "דרכון",
       passportBody: "הוסיפו פרטי נוסעים בבודק הרשמי",
       entryRules: "אישור כניסה",
@@ -828,6 +834,8 @@
     document.querySelectorAll("[data-planner-view]").forEach((button) => {
       button.addEventListener("click", () => showView(button.dataset.plannerView));
     });
+
+    byId("shareSiteBtn")?.addEventListener("click", shareSite);
 
     window.addEventListener("co-travel-languagechange", (event) => {
       applyPlannerCopy(event.detail?.language === "he" ? "he" : "en");
@@ -3476,6 +3484,25 @@
     try {
       await navigator.clipboard.writeText(link);
       showToast(t("linkCopied"));
+    } catch {
+      showToast(t("linkCopyFailed"));
+    }
+  }
+
+  async function shareSite() {
+    const url = new URL("./", window.location.href).href;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "Co-Travel", text: t("shareSiteText"), url });
+        return;
+      } catch (error) {
+        if (error?.name === "AbortError") return;
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+      showToast(t("siteLinkCopied"));
     } catch {
       showToast(t("linkCopyFailed"));
     }
