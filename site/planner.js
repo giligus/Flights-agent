@@ -2099,11 +2099,6 @@
             <div class="result-rating"><div class="star-rating" aria-label="Rate this plan from one to five">${[1, 2, 3, 4, 5].map((rating) => `<button class="star-button ${rating <= (trip.userRating || 0) ? "active" : ""}" type="button" data-rating="${rating}" aria-label="${rating} stars"><i data-lucide="star" aria-hidden="true"></i></button>`).join("")}</div><span>${trip.userRating ? `${trip.userRating}/5` : "Not rated"}</span></div>
           </section>
 
-          <section class="trip-side-panel">
-            <h3>${escapeHtml(t("browserOnly"))}</h3>
-            <p class="readiness-warning">${escapeHtml(t("browserOnlyBody"))}</p>
-            <button class="secondary" type="button" data-result-action="publish"><i data-lucide="globe-2" aria-hidden="true"></i>${escapeHtml(trip.published ? t("published") : t("publish"))}</button>
-          </section>
         </aside>
       </div>
     `;
