@@ -17,7 +17,7 @@
       newTrip: "New trip",
       heroEyebrow: "Your pace. Your trip.",
       heroTitle: "Plan easy. Travel more like yourself.",
-      heroBody: "Tell us what matters to you and your companions. co-travel turns those preferences into three practical trip plans you can compare and customize.",
+      heroBody: "Tell us what matters to you and your companions. Co-Travel turns those preferences into three practical trip plans you can compare and customize.",
       officialSources: "Official-source travel checks",
       groupPreferences: "Companion-aware preferences",
       destination: "Destination",
@@ -260,7 +260,7 @@
       newTrip: "טיול חדש",
       heroEyebrow: "הקצב שלכם. הטיול שלכם.",
       heroTitle: "מתכננים בקלות. מטיילים יותר בדרך שלכם.",
-      heroBody: "ספרו לנו מה חשוב לכם ולשותפים לנסיעה. co-travel יוצר שלוש תוכניות מעשיות שאפשר להשוות ולהתאים.",
+      heroBody: "ספרו לנו מה חשוב לכם ולשותפים לנסיעה. Co-Travel יוצר שלוש תוכניות מעשיות שאפשר להשוות ולהתאים.",
       officialSources: "בדיקות נסיעה ממקורות רשמיים",
       groupPreferences: "העדפות המותאמות לכל הקבוצה",
       destination: "יעד",
@@ -2771,7 +2771,7 @@
       addRule();
     });
 
-    addText("Built with co-travel. Verify opening hours, reservations, prices, and official travel requirements before booking.", { size: 8, color: "0.43 0.51 0.51" });
+    addText("Built with Co-Travel. Verify opening hours, reservations, prices, and official travel requirements before booking.", { size: 8, color: "0.43 0.51 0.51" });
     return buildPdfBytes(pages, pageWidth, pageHeight);
   }
 

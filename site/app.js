@@ -2184,7 +2184,7 @@ function updateRequirementsPreview(trip, markPrepared = false) {
       ${
         markPrepared && !missing.length
           ? "Open an official checker below for the current travel-document decision."
-          : "co-travel organizes your details but does not independently issue visa or entry decisions."
+          : "Co-Travel organizes your details but does not independently issue visa or entry decisions."
       }
     </div>
     <div class="provider-result-list">

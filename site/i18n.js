@@ -4,7 +4,7 @@ window.CO_TRAVEL_I18N = {
     "Switch language to Hebrew": "החלפת שפה לאנגלית",
     "Official sources. Private, browser-based ticket scanning.": "מקורות רשמיים. סריקת הכרטיס מתבצעת באופן פרטי בדפדפן.",
     "Plan your travel - have an easy trip": "תכננו את הנסיעה - וסעו בקלות",
-    "How can co-travel help?": "איך co-travel יכול לעזור?",
+    "How can Co-Travel help?": "איך Co-Travel יכול לעזור?",
     "Upload an existing ticket or plan the essential details of your next trip.": "העלו כרטיס קיים או תכננו את הפרטים החשובים של הנסיעה הבאה.",
     "Scan my ticket": "סריקת כרטיס טיסה",
     "Upload a PDF or image to extract and organize your flight details.": "העלו PDF או תמונה כדי לחלץ ולסדר את פרטי הטיסה.",

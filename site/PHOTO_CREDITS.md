@@ -1,6 +1,6 @@
 # Destination photo credits
 
-The destination photographs used by the co-travel static site are free to use under the [Unsplash License](https://unsplash.com/license). Attribution links are also shown directly on every rendered image.
+The destination photographs used by the Co-Travel static site are free to use under the [Unsplash License](https://unsplash.com/license). Attribution links are also shown directly on every rendered image.
 
 | Destination | Photographer | Source |
 | --- | --- | --- |
