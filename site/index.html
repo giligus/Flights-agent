@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./styles.css">
-    <link rel="stylesheet" href="./planner.css">
+    <link rel="stylesheet" href="./planner.css?v=20260803-trip-comments">
   </head>
   <body>
     <main class="shell product-shell">
@@ -218,6 +218,7 @@
                 <label class="field"><span data-planner-copy="mobility">Mobility needs</span><select id="plannerMobility"><option value="none" data-planner-copy="mobilityNone">No special requirements</option><option value="low-walking" data-planner-copy="mobilityLowWalking">Limit long walking days</option><option value="step-free" data-planner-copy="mobilityStepFree">Step-free routes needed</option></select></label>
                 <label class="field"><span data-planner-copy="dietary">Dietary needs</span><input id="plannerDietary" type="text" placeholder="Optional — vegetarian, allergies, kosher…" data-planner-placeholder="dietaryPlaceholder"></label>
                 <label class="field wide"><span data-planner-copy="mustHave">Must-have or avoid</span><textarea id="plannerConstraints" placeholder="For example: one beach day, avoid late nights, museum for Maya" data-planner-placeholder="constraintsPlaceholder"></textarea></label>
+                <label class="field wide"><span data-planner-copy="additionalRequests">Comments, preferences, and highlights</span><textarea id="plannerComments" placeholder="For example: photography spots, a birthday dinner, hidden neighborhoods, or extra café time" data-planner-placeholder="additionalRequestsPlaceholder"></textarea><small data-planner-copy="additionalRequestsHint">These notes stay with the trip and help shape relevant activity categories.</small></label>
               </div>
               <label class="privacy-note"><input id="savePreferenceProfile" type="checkbox" checked><span><strong data-planner-copy="rememberProfile">Remember this preference profile on this device</strong><small data-planner-copy="rememberProfileBody">You can remove it later from My trips. Nothing is uploaded by this static demo.</small></span></label>
             </section>
@@ -390,6 +391,6 @@
     <script src="./i18n.js"></script>
     <script src="./ticket-parser.js"></script>
     <script src="./app.js?v=20260803-co-travel-brand"></script>
-    <script src="./planner.js?v=20260803-co-travel-brand"></script>
+    <script src="./planner.js?v=20260803-trip-comments"></script>
   </body>
 </html>

@@ -116,6 +116,12 @@
       dietaryPlaceholder: "Optional — vegetarian, allergies, kosher…",
       mustHave: "Must-have or avoid",
       constraintsPlaceholder: "For example: one beach day, avoid late nights, museum for Maya",
+      additionalRequests: "Comments, preferences, and highlights",
+      additionalRequestsPlaceholder: "For example: photography spots, a birthday dinner, hidden neighborhoods, or extra café time",
+      additionalRequestsHint: "These notes stay with the trip and help shape relevant activity categories.",
+      requestNotes: "Your trip notes",
+      hardRequirements: "Must-have or avoid",
+      personalRequests: "Comments and highlights",
       rememberProfile: "Remember this preference profile on this device",
       rememberProfileBody: "You can remove it later from My trips. Nothing is uploaded by this static demo.",
       back: "Back",
@@ -359,6 +365,12 @@
       dietaryPlaceholder: "אופציונלי — צמחונות, אלרגיות, כשרות...",
       mustHave: "חובה או להימנע",
       constraintsPlaceholder: "לדוגמה: יום חוף אחד, בלי לילות מאוחרים, מוזיאון למאיה",
+      additionalRequests: "הערות, העדפות ודגשים נוספים",
+      additionalRequestsPlaceholder: "לדוגמה: נקודות צילום, ארוחת יום הולדת, שכונות נסתרות או יותר זמן בבתי קפה",
+      additionalRequestsHint: "ההערות נשמרות עם הטיול ומסייעות להתאים את סוגי הפעילויות.",
+      requestNotes: "ההערות שלכם לטיול",
+      hardRequirements: "חובה או להימנע",
+      personalRequests: "הערות ודגשים",
       rememberProfile: "שמירת פרופיל ההעדפות במכשיר הזה",
       rememberProfileBody: "אפשר להסיר אותו מאוחר יותר. בגרסה הזו דבר לא נשלח לשרת.",
       back: "חזרה",
@@ -1533,13 +1545,47 @@
     });
   }
 
+  function analyzeFreeTextPreferences(profile = {}) {
+    const text = `${profile.constraints || ""} ${profile.comments || ""}`.trim().toLowerCase();
+    const interestPatterns = {
+      food: /\b(food|restaurant|restaurants|cafe|cafes|café|cafés|culinary|market|tasting)\b|אוכל|מסעד|קפה|שוק/iu,
+      culture: /\b(museum|museums|history|historic|culture|cultural|gallery|galleries|heritage|art)\b|מוזיאון|היסטור|תרבות|גלריה|אמנות/iu,
+      architecture: /\b(architecture|architectural|building|buildings|design)\b|אדריכלות|מבנים|עיצוב/iu,
+      nature: /\b(beach|beaches|coast|coastal|ocean|sea|nature|park|parks|garden|gardens|hike|hiking|viewpoint|viewpoints)\b|חוף|ים|טבע|פארק|גנים|תצפית/iu,
+      nightlife: /\b(nightlife|bar|bars|club|clubs|late night)\b|חיי לילה|ברים|מועדון/iu,
+      shopping: /\b(shopping|shops|boutique|boutiques|marketplace)\b|קניות|חנויות|בוטיק/iu,
+      wellness: /\b(wellness|spa|relaxation|massage|yoga)\b|ספא|רוגע|מסאז|יוגה/iu,
+      family: /\b(family|families|kids|children|child-friendly)\b|משפחה|ילדים/iu,
+      event: /\b(show|shows|concert|concerts|performance|performances|event|events|theatre|theater|festival)\b|מופע|הופעה|אירוע|תיאטרון|פסטיבל/iu,
+    };
+    const negativePatterns = {
+      nightlife: /\b(avoid|no|without|skip)\s+(late nights?|nightlife|bars?|clubs?)\b|בלי לילות מאוחרים|ללא חיי לילה/iu,
+    };
+    const interests = Object.entries(interestPatterns)
+      .filter(([key, pattern]) => pattern.test(text) && !negativePatterns[key]?.test(text))
+      .map(([key]) => key);
+    return {
+      text,
+      interests,
+      avoidLateNights: /\b(avoid|no|without|skip)\s+(late nights?|nightlife|bars?|clubs?)\b|early nights?|בלי לילות מאוחרים|ללא חיי לילה/iu.test(text),
+      beach: /\b(beach|beaches|coast|coastal|ocean|sea)\b|חוף|ים/iu.test(text),
+      museum: /\b(museum|museums|gallery|galleries)\b|מוזיאון|גלריה/iu.test(text),
+      photography: /\b(photo|photos|photography|photographic|sunrise|sunset viewpoint)\b|צילום|זריחה|תצפית שקיעה/iu.test(text),
+      celebration: /\b(birthday|anniversary|celebration|special dinner)\b|יום הולדת|יום נישואין|חגיגה|ארוחה מיוחדת/iu.test(text),
+    };
+  }
+
   function createTripFromForm() {
     const destinations = state.routeMode === "multi"
       ? state.routeStops.map((stop) => ({ city: stop.city.trim(), nights: clampRouteNights(stop.nights) }))
       : [{ city: byId("plannerDestination").value.trim(), nights: Number(byId("plannerDuration").value) }];
     const destination = destinations.map((stop) => stop.city).join(" → ");
     const totalNights = destinations.reduce((sum, stop) => sum + stop.nights, 0);
-    const interests = [...document.querySelectorAll(".interest-picker input:checked")].map((input) => input.value);
+    const selectedInterests = [...document.querySelectorAll(".interest-picker input:checked")].map((input) => input.value);
+    const constraints = byId("plannerConstraints").value.trim();
+    const comments = byId("plannerComments").value.trim();
+    const textSignals = analyzeFreeTextPreferences({ constraints, comments });
+    const interests = [...new Set([...selectedInterests, ...textSignals.interests])];
     const profile = {
       pace: state.preferences.pace,
       structure: state.preferences.structure,
@@ -1547,7 +1593,9 @@
       interests,
       mobility: byId("plannerMobility").value,
       dietary: byId("plannerDietary").value.trim(),
-      constraints: byId("plannerConstraints").value.trim(),
+      constraints,
+      comments,
+      avoidLateNights: textSignals.avoidLateNights,
     };
     const template = findReusableTemplate(destinations[0].city, interests, state.sourcePlanId);
     const trip = {
@@ -1612,6 +1660,7 @@
   function buildDays(trip, info, type) {
     const routeStops = getTripStops(trip);
     const isMultiCity = routeStops.length > 1;
+    const textSignals = analyzeFreeTextPreferences(trip.profile);
     const singleCityDayCount = Math.max(2, Math.min(trip.nights, 7));
     const dayPlan = [];
     routeStops.forEach((stop, cityIndex) => {
@@ -1619,6 +1668,7 @@
       Array.from({ length: cityDays }, (_, localIndex) => dayPlan.push({ stop, cityIndex, localIndex }));
     });
     const startTimes = type === "relaxed" || trip.profile.pace === "slow" ? ["10:30", "14:30", "19:30"] : type === "immersive" || trip.profile.pace === "active" ? ["08:30", "13:00", "18:30"] : ["09:30", "14:00", "19:00"];
+    if (trip.profile.avoidLateNights || textSignals.avoidLateNights) startTimes[2] = "18:30";
     const themes = type === "immersive"
       ? ["Stories and landmarks", "Markets and makers", "Neighborhood culture", "A signature local day", "Food and evening atmosphere", "Choose-your-own discovery", "A memorable finish"]
       : type === "relaxed"
@@ -1651,9 +1701,23 @@
 
     return dayPlan.map(({ stop, cityIndex, localIndex }, index) => {
       const cityInfo = getDestinationInfo(stop.city);
-      const highlight = cityInfo.highlights[localIndex % cityInfo.highlights.length];
+      let highlight = cityInfo.highlights[localIndex % cityInfo.highlights.length];
+      const requestedHighlights = [
+        textSignals.beach ? "Beach or waterfront time" : "",
+        textSignals.museum ? "Museum or gallery highlight" : "",
+        textSignals.photography ? "Photography viewpoint and scenic walk" : "",
+      ].filter(Boolean);
+      if (requestedHighlights[localIndex]) highlight = requestedHighlights[localIndex];
       const chosenInterest = index % 2 === 0 ? interest : secondInterest;
-      const evening = type === "relaxed" ? "Open evening near your base" : index % 2 === 0 ? "Neighborhood dinner" : "Sunset or local evening experience";
+      const evening = textSignals.celebration && index === 0
+        ? "Celebration dinner"
+        : trip.profile.avoidLateNights || textSignals.avoidLateNights
+          ? "Early dinner and a quiet evening"
+          : type === "relaxed"
+            ? "Open evening near your base"
+            : index % 2 === 0
+              ? "Neighborhood dinner"
+              : "Sunset or local evening experience";
       const isTransferDay = isMultiCity && cityIndex > 0 && localIndex === 0;
       const items = isTransferDay
         ? [
@@ -1899,6 +1963,22 @@
     });
   }
 
+  function renderTripRequestSummary(profile = {}) {
+    const entries = [
+      profile.constraints ? { label: t("hardRequirements"), value: profile.constraints } : null,
+      profile.comments ? { label: t("personalRequests"), value: profile.comments } : null,
+    ].filter(Boolean);
+    if (!entries.length) return "";
+    return `
+      <section class="request-summary" aria-label="${escapeHtml(t("requestNotes"))}">
+        <div class="request-summary-heading"><i data-lucide="message-square-text" aria-hidden="true"></i><strong>${escapeHtml(t("requestNotes"))}</strong></div>
+        <div class="request-summary-grid">
+          ${entries.map((entry) => `<div><small>${escapeHtml(entry.label)}</small><p>${escapeHtml(entry.value)}</p></div>`).join("")}
+        </div>
+      </section>
+    `;
+  }
+
   function renderTripResult() {
     const trip = state.currentTrip;
     if (!trip) return;
@@ -1938,6 +2018,7 @@
           <div class="preference-summary-tags">${profileTags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>
           <button class="secondary" type="button" data-result-action="edit">${escapeHtml(t("editPreferences"))}</button>
         </div>
+        ${renderTripRequestSummary(trip.profile)}
       </header>
 
       <div class="result-layout">
@@ -2527,6 +2608,7 @@
       mobility: "none",
       dietary: "",
       constraints: "",
+      comments: "",
     };
     const trip = {
       id: `preview-${card.id}`,
@@ -2756,6 +2838,12 @@
     y -= 6;
     addText("TRIP AT A GLANCE", { size: 9, bold: true, color: "0.05 0.43 0.43" });
     addText(`${option.days.length} days  |  ${option.days.reduce((total, day) => total + day.items.length, 0)} places and experiences  |  ${card.tags.join(" / ")}`, { size: 10 });
+    if (trip.profile?.constraints || trip.profile?.comments) {
+      y -= 4;
+      addText("YOUR TRIP NOTES", { size: 9, bold: true, color: "0.05 0.43 0.43" });
+      if (trip.profile.constraints) addText(`Must-have or avoid: ${trip.profile.constraints}`, { size: 9, color: "0.25 0.34 0.35" });
+      if (trip.profile.comments) addText(`Comments and highlights: ${trip.profile.comments}`, { size: 9, color: "0.25 0.34 0.35" });
+    }
     y -= 8;
     addRule();
 
@@ -2903,7 +2991,7 @@
       showToast(t("ideaSaved"));
       return;
     }
-    const profile = { pace: trip.tags.includes("slow") ? "slow" : "balanced", structure: "balanced", crowds: "timed", interests: trip.tags.filter((tag) => tag !== "slow"), mobility: "none", dietary: "", constraints: "" };
+    const profile = { pace: trip.tags.includes("slow") ? "slow" : "balanced", structure: "balanced", crowds: "timed", interests: trip.tags.filter((tag) => tag !== "slow"), mobility: "none", dietary: "", constraints: "", comments: "" };
     const savedTrip = {
       id: `trip-${Date.now()}`,
       destination: trip.destination,
@@ -2942,6 +3030,7 @@
     byId("plannerMobility").value = trip.profile?.mobility || "none";
     byId("plannerDietary").value = trip.profile?.dietary || "";
     byId("plannerConstraints").value = trip.profile?.constraints || "";
+    byId("plannerComments").value = trip.profile?.comments || "";
     document.querySelectorAll(".interest-picker input").forEach((input) => { input.checked = trip.profile?.interests?.includes(input.value) || false; });
     ["pace", "structure", "crowds"].forEach((question) => selectConceptAnswer(question, trip.profile?.[question] || "balanced"));
     state.sourcePlanId = trip.sourcePlanId || null;
@@ -3339,6 +3428,8 @@
       interests: [...document.querySelectorAll(".interest-picker input:checked")].map((input) => input.value),
       mobility: byId("plannerMobility").value,
       dietary: byId("plannerDietary").value.trim(),
+      constraints: byId("plannerConstraints").value.trim(),
+      comments: byId("plannerComments").value.trim(),
     };
     try { localStorage.setItem(storageKeys.profile, JSON.stringify(profile)); } catch { /* Continue without persistence. */ }
   }
@@ -3351,6 +3442,8 @@
       document.querySelectorAll(".interest-picker input").forEach((input) => { input.checked = profile.interests?.includes(input.value) || false; });
       byId("plannerMobility").value = profile.mobility || "none";
       byId("plannerDietary").value = profile.dietary || "";
+      byId("plannerConstraints").value = profile.constraints || "";
+      byId("plannerComments").value = profile.comments || "";
     } catch { /* Ignore invalid local profile data. */ }
   }
 
