@@ -184,9 +184,9 @@ const officialVisaSources = {
   ],
   CH: [
     {
-      label: "Switzerland visa requirements",
-      url: "https://www.eda.admin.ch/eda/en/home/einreise-aufenthalt-schweiz/visabestimmungen-visumantragsformular.html",
-      note: "Official Swiss Federal Department of Foreign Affairs visa guidance.",
+      label: "Switzerland State Secretariat for Migration",
+      url: "https://www.sem.admin.ch/sem/en/home/themen/einreise.html",
+      note: "Official Swiss government entry and visa guidance.",
     },
   ],
   IE: [
@@ -240,12 +240,52 @@ const officialVisaSources = {
   ],
   TR: [
     {
-      label: "Türkiye e-Visa",
-      url: "https://www.evisa.gov.tr/en/",
-      note: "Official Republic of Türkiye electronic visa portal.",
+      label: "Türkiye Ministry of Foreign Affairs visa information",
+      url: "https://www.mfa.gov.tr/visa-information-for-foreigners.en.mfa",
+      note: "Official Republic of Türkiye Ministry of Foreign Affairs visa guidance.",
     },
   ],
 };
+const officialGovernmentVisaHosts = new Set([
+  "www.mfa.gr",
+  "israel-entry.piba.gov.il",
+  "www.gov.cy",
+  "vistoperitalia.esteri.it",
+  "www.gov.uk",
+  "u.ae",
+  "www.thaievisa.go.th",
+  "esta.cbp.dhs.gov",
+  "travel.state.gov",
+  "france-visas.gouv.fr",
+  "www.canada.ca",
+  "www.auswaertiges-amt.de",
+  "www.exteriores.gob.es",
+  "www.netherlandsworldwide.nl",
+  "www.bmeia.gv.at",
+  "www.sem.admin.ch",
+  "www.irishimmigration.ie",
+  "immi.homeaffairs.gov.au",
+  "www.immigration.govt.nz",
+  "www.mofa.go.jp",
+  "www.visa.go.kr",
+  "www.ica.gov.sg",
+  "indianvisaonline.gov.in",
+  "www.mfa.gov.tr",
+]);
+
+function isVerifiedGovernmentVisaSource(source) {
+  try {
+    const url = new URL(source?.url || "");
+    return url.protocol === "https:" && officialGovernmentVisaHosts.has(url.hostname.toLowerCase());
+  } catch {
+    return false;
+  }
+}
+
+function verifiedGovernmentVisaSources(countryCode) {
+  return (officialVisaSources[countryCode] || []).filter(isVerifiedGovernmentVisaSource);
+}
+
 const destinationDirectory = [
   ...Object.entries(airports)
     .map(([key, airport]) => ({
@@ -817,6 +857,8 @@ function buildStandaloneRequirementsQuery() {
 
 function renderVisaTool() {
   const options = Object.entries(officialVisaSources)
+    .map(([countryCode]) => [countryCode, verifiedGovernmentVisaSources(countryCode)])
+    .filter(([, sources]) => sources.length)
     .sort(([leftCode], [rightCode]) =>
       (labelForCountry(leftCode) || leftCode).localeCompare(labelForCountry(rightCode) || rightCode)
     )
@@ -846,7 +888,7 @@ function renderVisaTool() {
             <div>
               <div class="summary-label">Official sources only</div>
               <h2>Where are you going?</h2>
-              <p>Select one destination to view the relevant government or official authority websites.</p>
+              <p>Select one destination to view verified government visa websites only.</p>
             </div>
           </div>
           <span id="visaSelectionCount" class="provider-badge">1 selected</span>
@@ -864,7 +906,7 @@ function renderVisaTool() {
             <span class="section-icon icon-blue" aria-hidden="true"><i data-lucide="landmark"></i></span>
             <div>
               <h2>Official visa links</h2>
-              <p>Eligibility depends on your passport and itinerary. Each link opens the official authority website.</p>
+              <p>Eligibility depends on your passport and itinerary. Every link opens a verified government website.</p>
             </div>
           </div>
         </div>
@@ -899,7 +941,7 @@ function renderVisaResults() {
   if (!count || !resultsPanel) return;
   count.textContent = `${visaSelectionState.size} selected`;
   const sources = [...visaSelectionState].flatMap((countryCode) =>
-    (officialVisaSources[countryCode] || []).map((source) => ({
+    verifiedGovernmentVisaSources(countryCode).map((source) => ({
       ...source,
       countryCode,
       countryName: labelForCountry(countryCode) || countryCode,
@@ -2075,12 +2117,7 @@ function renderRequirements(trip) {
         </article>
 
         <article class="requirement-card">
-          <h3>Official checkers</h3>
-          ${sources.globalCheckers.map(renderRequirementSource).join("")}
-        </article>
-
-        <article class="requirement-card">
-          <h3>Destination sources</h3>
+          <h3>Official government sources</h3>
           ${
             sources.destinationSources.length
               ? sources.destinationSources.map(renderRequirementSource).join("")
@@ -2313,6 +2350,7 @@ async function copyText(text) {
 }
 
 function renderRequirementSource(source) {
+  if (!isVerifiedGovernmentVisaSource(source)) return "";
   return `
     <article class="requirement-card">
       <a class="official-link-button" href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer">
@@ -2325,19 +2363,6 @@ function renderRequirementSource(source) {
 }
 
 function buildRequirementSources(trip) {
-  const globalCheckers = [
-    {
-      label: "TravelDoc.aero",
-      url: "https://www.traveldoc.aero/",
-      note: "Airline-style document, visa, passport, and health checker.",
-    },
-    {
-      label: "IATA Travel Centre",
-      url: "https://www.iatatravelcentre.com/",
-      note: "IATA passenger travel-document checker.",
-    },
-  ];
-
   const routeSegments = trip.segments.map((segment) => ({
     departure_airport: segment.departure_airport,
     arrival_airport: segment.arrival_airport,
@@ -2360,7 +2385,6 @@ function buildRequirementSources(trip) {
   return {
     routeSegments,
     destinationName: destinationNames.join(", ") || "the destination",
-    globalCheckers,
     destinationSources,
     requiredInputs: [
       "Passenger citizenship/nationality",
@@ -2374,13 +2398,13 @@ function buildRequirementSources(trip) {
 
 function buildRequirementSourcesForCountry(countryCode) {
   if (!countryCode) return [];
-  return officialVisaSources[countryCode] || [];
+  return verifiedGovernmentVisaSources(countryCode);
 }
 
 function uniqueSourcesByUrl(sources) {
   const seen = new Set();
   return sources.filter((source) => {
-    if (!source.url || seen.has(source.url)) return false;
+    if (!isVerifiedGovernmentVisaSource(source) || seen.has(source.url)) return false;
     seen.add(source.url);
     return true;
   });
