@@ -1590,9 +1590,8 @@
     const destination = destinations.map((stop) => stop.city).join(" → ");
     const totalNights = destinations.reduce((sum, stop) => sum + stop.nights, 0);
     const selectedInterests = [...document.querySelectorAll(".interest-picker input:checked")].map((input) => input.value);
-    const constraints = byId("plannerConstraints").value.trim();
     const comments = byId("plannerComments").value.trim();
-    const textSignals = analyzeFreeTextPreferences({ constraints, comments });
+    const textSignals = analyzeFreeTextPreferences({ comments });
     const interests = [...new Set([...selectedInterests, ...textSignals.interests])];
     const profile = {
       pace: state.preferences.pace,
@@ -1601,7 +1600,6 @@
       interests,
       mobility: byId("plannerMobility").value,
       dietary: byId("plannerDietary").value.trim(),
-      constraints,
       comments,
       avoidLateNights: textSignals.avoidLateNights,
     };
@@ -3032,7 +3030,6 @@
     byId("plannerCompanions").value = trip.companions || "";
     byId("plannerMobility").value = trip.profile?.mobility || "none";
     byId("plannerDietary").value = trip.profile?.dietary || "";
-    byId("plannerConstraints").value = trip.profile?.constraints || "";
     byId("plannerComments").value = trip.profile?.comments || "";
     document.querySelectorAll(".interest-picker input").forEach((input) => { input.checked = trip.profile?.interests?.includes(input.value) || false; });
     ["pace", "structure", "crowds"].forEach((question) => selectConceptAnswer(question, trip.profile?.[question] || "balanced"));
@@ -3431,7 +3428,6 @@
       interests: [...document.querySelectorAll(".interest-picker input:checked")].map((input) => input.value),
       mobility: byId("plannerMobility").value,
       dietary: byId("plannerDietary").value.trim(),
-      constraints: byId("plannerConstraints").value.trim(),
       comments: byId("plannerComments").value.trim(),
     };
     try { localStorage.setItem(storageKeys.profile, JSON.stringify(profile)); } catch { /* Continue without persistence. */ }
@@ -3445,7 +3441,6 @@
       document.querySelectorAll(".interest-picker input").forEach((input) => { input.checked = profile.interests?.includes(input.value) || false; });
       byId("plannerMobility").value = profile.mobility || "none";
       byId("plannerDietary").value = profile.dietary || "";
-      byId("plannerConstraints").value = profile.constraints || "";
       byId("plannerComments").value = profile.comments || "";
     } catch { /* Ignore invalid local profile data. */ }
   }
